@@ -1,0 +1,132 @@
+/*********************************************************DEFAULT SCREEN****************************************************************/
+
+.tab-body {
+    margin-top: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.tab-body h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--darkTeal);
+}
+
+.button-style {
+    display: flex;
+    flex-direction: row;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: var(--bgColor);
+    border: 1px solid var(--textColor);
+    color: var(--textColor);
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.button-icon {
+    margin-right: 5px;
+    height: 24px;
+    width: 24px;
+}
+
+/*********************************************************OPEN REQUEST****************************************************************/
+
+.open-request-container {
+    border-radius: 8px;
+    margin-bottom: 16px;
+    background-color: white;
+    padding: 16px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.delete-icon {
+    cursor: pointer;
+}
+
+.main-content {
+    width: 35%;
+    flex-direction: column;
+    display: flex;
+    align-items: start;
+}
+
+.main-content p {
+    font-size: 16px;
+    margin: 0;
+    font-weight: 600;
+    color: var(--boldTextColor);
+}
+
+.main-content-row {
+    width: 80%;
+    display: flex;
+    margin-top: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.main-content-row p {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--lightTextColor);
+}
+
+.ai-edit {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-edit span {
+    color: var(--textColor);
+    font-size: 20px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.ai-edit p {
+    color: var(--textColor);
+    font-size: 16px;
+}
+
+
+/*********************************************************RESOLVED REQUEST****************************************************************/
+
+.header-title {
+    display: flex;
+    width: 60%;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--textColor);
+}
+
+.header-title img {
+    margin-right: 5px;
+}
+
+.header-detail{
+font-size: 14px;
+font-weight: 400;
+color: var(--lightTextColor);
+display: flex;
+flex-direction: row;
+justify-content: end;
+width: 25%;
+}
+
+.header-detail span{
+    margin:0px 12px !important;
+}

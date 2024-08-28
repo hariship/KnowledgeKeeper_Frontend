@@ -1,0 +1,109 @@
+/**********************************************************SIDEBAR*****************************************************/
+.sidebar {
+    width: 15%;
+    background-color: white;
+    border-radius: 16px;
+    padding-bottom: 10px;
+    margin: 24px;
+}
+.document-container{
+    margin: 10px 0px;
+    min-height: 55vh;
+    display: flex;
+    flex-direction: column;
+}
+.profile-section {
+    padding: 0px 10px;
+    display: flex;
+    width: 90%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.profile-section-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    cursor: pointer;
+}
+
+.profile-section-row img {
+    margin-right: 8px;
+}
+
+.profile-section-row h2 {
+    margin-right: 10px;
+    font-size: 14px;
+    color: var(--textColor);
+}
+
+.sidebar-item {
+    display: flex;
+    flex-direction: row;
+    padding: 10px 10px;
+    cursor: default;
+}
+
+.sidebar-item img {
+    margin-right: 10px;
+}
+
+.sidebar-item span {
+    color: var(--textColor);
+    font-size: 14px;
+}
+
+
+.folder-header {
+    display: flex;
+    flex-direction: row;
+    padding: 10px 10px;
+    cursor: pointer;
+}
+
+.folder-header img {
+    margin-right: 10px;
+}
+
+.folder-header span {
+    color: var(--textColor);
+    font-size: 14px;
+}
+
+
+
+
+.folder-contents span {
+    font-size: 14px;
+    color: var(--textColor);
+}
+
+.folder-contents img {
+    margin-right: 10px;
+}
+
+.document-content {
+    padding-left: 20px;
+    display: flex;
+    flex-direction: row;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    cursor: pointer;
+}
+
+.document-content:hover,
+.folder-header:hover {
+    background-color: var(--hoverTeal);
+}
+
+.document-content:hover span,
+.folder-header:hover span {
+    color: var(--darkTeal); 
+}
+
+.document-content:hover img,
+.folder-header:hover img {
+    color: red; 
+}
