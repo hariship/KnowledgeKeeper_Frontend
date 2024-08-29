@@ -7,7 +7,7 @@
 :root {
   --primary-color: #3498db;
   --secondary-color: #2ecc71;
-  --accent-color: #e74c3c;
+  --red10-color: #690000;
   --background-color: #ecf0f1;
   --hover-color: #2980b9;
   --highlight-color: #f1c40f;
@@ -16,6 +16,7 @@
   --textColor: #727272;
   --darkGrey: #363636;
   --lightTextColor: #9B9B9B;
+  --lightestGreyColor:#E6E6E6;
   --borderColor: #dfdfdf;
   --bgColor: #FBFBFB;
   --darkTeal: #006666;

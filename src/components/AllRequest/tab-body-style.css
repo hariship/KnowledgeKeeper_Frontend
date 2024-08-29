@@ -52,10 +52,19 @@
 
 .delete-icon {
     cursor: pointer;
+    height: 20px;
+    width: 20px;
+    background-color: white; 
+    border-radius: 50%;
+    padding: 6px;
+    box-shadow: 0 0 0px rgba(255, 0, 0, 0);
+    transition: box-shadow 0.3s ease; 
 }
-
+.delete-icon:hover {
+    box-shadow: 0 0 10px rgba(248, 127, 127, 0.4);
+}
 .main-content {
-    width: 35%;
+    width: 60%;
     flex-direction: column;
     display: flex;
     align-items: start;
@@ -69,7 +78,6 @@
 }
 
 .main-content-row {
-    width: 80%;
     display: flex;
     margin-top: 10px;
     flex-direction: row;
@@ -83,11 +91,19 @@
     color: var(--lightTextColor);
 }
 
+.main-content-row span{
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--lightTextColor);
+    margin-right: 50px;
+}
+
 .ai-edit {
+    flex-grow: 1;
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
 }
 
 .ai-edit span {
