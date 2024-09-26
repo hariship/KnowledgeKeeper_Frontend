@@ -1,4 +1,3 @@
-import { useState, useEffect, useRef } from "react";
 
 const truncateText = (text, maxWidth, element) => {
   element.textContent = text;

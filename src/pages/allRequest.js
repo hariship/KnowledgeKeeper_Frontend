@@ -7,10 +7,62 @@ import ResolvedRequestComponet from "../components/AllRequest/ClosedRequestCompo
 import AddChangeRequestPopUp from "../components/PopUps/AddChangeRequestPopUp";
 import DeletePopUp from "../components/PopUps/DeletePopUp";
 import ResolveChangeRequestPopUp from "../components/PopUps/ResolveChangeRequestPopUp.js";
+import SvgAddIcon from "../icons/AddIcon.js";
 
 const openRequestList = [
   {
-    title: "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
+    title:
+      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 25,
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 25,
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 0,
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 25,
+  },
+  {
+    title:
+      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 25,
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 25,
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 0,
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+    ai_edits: 25,
+  },
+  {
+    title:
+      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
     employee_name: "Viresh Dhruv",
     date: "12 July ‘24, 02:00pm",
     ai_edits: 25,
@@ -36,6 +88,67 @@ const openRequestList = [
 ];
 
 const resolvedRequestList = [
+  {
+    title:
+      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
+  {
+    title: "Do you have section for Anchor?",
+    employee_name: "Viresh Dhruv",
+    date: "12 July ‘24, 02:00pm",
+  },
   {
     title: "Do you have section for Anchor?",
     employee_name: "Viresh Dhruv",
@@ -126,7 +239,7 @@ const AllRequests = () => {
           openRequestList.length === 0 ? (
             <DefaultAllRequestTab
               text="No open requests"
-              icon={icons.addIcon}
+              Icon={SvgAddIcon}
               buttonText="Create a Request"
               onClick={handlePopupToggle}
             />
@@ -149,6 +262,7 @@ const AllRequests = () => {
           <DefaultAllRequestTab
             text="No requests are resolved"
             buttonText="Check Open Request"
+            
             onClick={() => handleTabChange("open")}
           />
         ) : (
@@ -168,6 +282,7 @@ const AllRequests = () => {
         onClose={handleClosePopup}
       />
       <DeletePopUp
+      buttonText="Delete"
         isVisible={showDeleteDocPopUp}
         title="Delete Document"
         subtitle="All the applied changes will be lost"
@@ -179,9 +294,8 @@ const AllRequests = () => {
         onClose={handleCloseZeroEditPopUp}
         title="0 AI edits"
         subtitle="KnowledgeKeeper AI did not find this relevant."
-        lButtonText='AI is wrong'
+        lButtonText="AI is wrong"
         rButtonText="OK"
-        
       />
     </div>
   );

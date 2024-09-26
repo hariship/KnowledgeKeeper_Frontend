@@ -1,13 +1,15 @@
 
-import icons from '../../assets/icons';
+import SvgDefaultChangeRequestScreen from '../../icons/DefaultChangeRequestScreen';
 import './tab-body-style.css';
 import React from 'react';
-const DefaultAllRequestTab = ({ text, buttonText, onClick, icon }) => {
+
+const DefaultAllRequestTab = ({ text, buttonText, onClick, Icon=null }) => {
     return (<div className='tab-body'>
-        <img src={icons.changeRequestScreenIcon} alt='icon' />
+        <SvgDefaultChangeRequestScreen  className ="default-icon"/>
         <h2>{text}</h2>
         <button onClick={onClick} className='button-style'>
-            {icon && <img className='button-icon' src={icon} alt='icon'></img>}{buttonText}
+        {Icon && <Icon  className="button-icon"/>}
+        {buttonText}
         </button>
     </div>)
 }

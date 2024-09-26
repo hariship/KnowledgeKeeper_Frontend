@@ -1,15 +1,28 @@
-import icons from "../../assets/icons";
 import React from "react";
-import './tab-body-style.css';
+import icons from "../../assets/icons";
+import "./tab-body-style.css";
+import CustomTooltip from "../PopUps/CustomToolTip";
 
-const ResolvedRequestComponet = ({ title, employee_name, date, }) => {
-    return (
-        <div className="open-request-container">
-            <div className="header-title"><img src={icons.doneIcon} alt="icon" />{title}</div>
-            <div className="header-detail">
-               {employee_name}      <span>|</span>   {date}
-            </div>
-        </div>);
-}
+const ResolvedRequestComponent = ({ title, employee_name, date }) => {
+  const tooltipId = "resolved-request-tooltip";
+  return (
+    <div className="open-request-container">
+      <div className="header-title">
+        <img
+        className="done-icon"
+          src={icons.doneIcon}
+          alt="icon"
+        />
+        <span data-tooltip-id={tooltipId} data-tooltip-content={title}>
+          {title}
+        </span>
+      </div>
+      <div className="header-detail">
+        {employee_name} <span>|</span> {date}
+      </div>
+      <CustomTooltip id={tooltipId} />
+    </div>
+  );
+};
 
-export default ResolvedRequestComponet;
+export default ResolvedRequestComponent;

@@ -1,6 +1,7 @@
 import React from "react";
 import icons from "../../assets/icons";
 import "./tab-body-style.css";
+import CustomTooltip from "../PopUps/CustomToolTip";
 
 const OpenRequestComponent = ({
   title,
@@ -10,12 +11,11 @@ const OpenRequestComponent = ({
   onClick,
   onClickDelete,
 }) => {
-  const truncatedTitle = title.length > 80 ? `${title.substring(0, 80)}...` : title;
-
+  const tooltipId = "open-request-tooltip";
   return (
     <div className="open-request-container" onClick={onClick}>
       <div className="main-content">
-        <p>{truncatedTitle}</p>
+        <p data-tooltip-id={tooltipId} data-tooltip-content={title}>{title}</p>
         <div className="main-content-row">
           <span>{employee_name}</span>
           <p>{date}</p>
@@ -34,6 +34,7 @@ const OpenRequestComponent = ({
           onClickDelete();
         }}
       />
+       <CustomTooltip id={tooltipId} />
     </div>
   );
 };

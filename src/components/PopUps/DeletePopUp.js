@@ -6,6 +6,7 @@ const DeletePopUp = ({
   isVisible,
   title,
   subtitle,
+  buttonText,
   desc,
   onClick,
   onClose,
@@ -23,7 +24,7 @@ const DeletePopUp = ({
           <p>{desc}</p>
         </div>
         <button className="delete-button" onClick={onClick}>
-          Delete
+        {buttonText}
         </button>
       </div>
     </div>
