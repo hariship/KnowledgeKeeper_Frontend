@@ -7,7 +7,7 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import LoginPage from "./pages/LoginPage";
+import LoginPage from "./pages/loginPage";
 import HomePage from "./pages/homePage";
 import { AuthProvider } from "./components/ProtectedRoute/AuthContext";
 import { ToastContainer } from "react-toastify";
