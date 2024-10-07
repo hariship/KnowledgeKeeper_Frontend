@@ -16,10 +16,7 @@
   color: var(--darkTeal);
 }
 
-.default-icon {
-  height: 25%;
-  width: 25%;
-}
+
 
 .button-style {
   display: flex;

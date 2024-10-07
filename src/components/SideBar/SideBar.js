@@ -13,73 +13,6 @@ import { apiService } from "../../services/apiService";
 import Folder from "./Folder";
 import SvgKkLogo from "../../icons/KkLogo";
 
-// const userDetail = {
-//   name: "UserId256153712372637123642786",
-// };
-// const projectList = [
-//   {
-//     // team_name: "Teamspace Amazon AmazonAmazon",
-//     // folder_list: [
-//     //   {
-//     _id: "0",
-//     folder_name: "Product",
-//     documents: [
-//       {
-//         doc_id: "0",
-//         doc_name: "Insperations ManagementInsperations Management",
-//       },
-//       { doc_id: "1", doc_name: "Wireframe" },
-//     ],
-//   },
-//   {
-//     _id: "1",
-//     folder_name: "Design management",
-//     documents: [
-//       { doc_id: "2", doc_name: "Insperations" },
-//       { doc_id: "3", doc_name: "Wireframe" },
-//     ],
-//   },
-//   {
-//     _id: "2",
-//     folder_name: "Design management",
-//     documents: [
-//       { doc_id: "4", doc_name: "Insperations" },
-//       { doc_id: "5", doc_name: "Wireframe" },
-//     ],
-//   },
-//   {
-//     _id: "3",
-//     folder_name: "Design management",
-//     documents: [
-//       { doc_id: "6", doc_name: "Insperations" },
-//       { doc_id: "7", doc_name: "Wireframe" },
-//     ],
-//   },
-//   //   ],
-//   // },
-//   {
-//     // team_name: "Team B",
-//     // folder_list: [
-//     //   {
-//     _id: "4",
-//     folder_name: "Product",
-//     documents: [
-//       { doc_id: "8", doc_name: "Insperations Management" },
-//       { doc_id: "9", doc_name: "Wireframe" },
-//     ],
-//   },
-//   {
-//     _id: "5",
-//     folder_name: "Design management",
-//     documents: [
-//       { doc_id: "10", doc_name: "Insperations" },
-//       { doc_id: "11", doc_name: "Wireframe" },
-//     ],
-//   },
-//   //   ],
-//   // },
-// ];
-
 const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [isCreateFolderPopupVisible, setIsCreateFolderPopupVisible] =
     useState(false);
@@ -96,19 +29,19 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [isFolderDeletePopupVisible, setIsFolderDeletePopupVisible] =
     useState(false);
   const [isDocDeletePopupVisible, setIsDocDeletePopupVisible] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+
   const [projectList, setProjectList] = useState([]);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     getClientDetails();
-  }, [isDocDeletePopupVisible,isCreateFolderPopupVisible]);
+  }, [isDocDeletePopupVisible, isCreateFolderPopupVisible]);
 
   const getClientDetails = async () => {
     try {
-      // setLoading(true);
       const data = await apiService.getUserTeamSpace();
       setProjectList(data);
-      console.log("navigation data",data);
+      console.log("navigation data", data);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -143,6 +76,11 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const handleCreateFolder = async (folderName) => {
     await apiService.createFolder(folderName);
     handleCloseFolderPopup();
+  };
+
+  const handleCreateDocument = async (folderId, documentName) => {
+    await apiService.createDocument(folderId, documentName);
+    handleCloseDocPopup();
   };
 
   const handleCloseFolderPopup = () => {
@@ -191,24 +129,30 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     },
   ];
   const handleOpenFolderDeletePopup = (folderId) => {
-    setSelectedFolderId(folderId);
+    setSelectedId(folderId);
     setIsFolderDeletePopupVisible(true);
   };
 
   const handleDeleteFolder = async () => {
-    await apiService.deleteFolder(selectedFolderId);
+    await apiService.deleteFolder(selectedId);
     handleCloseDocDeletePopup();
   };
   const handleCloseFolderDeletePopup = () => {
     setIsFolderDeletePopupVisible(false);
   };
 
-  const handleOpenDocDeletePopup = (e) => {
+  const handleOpenDocDeletePopup = (docId) => {
+    setSelectedId(docId);
     setIsDocDeletePopupVisible(true);
   };
 
   const handleCloseDocDeletePopup = () => {
     setIsDocDeletePopupVisible(false);
+  };
+
+  const handleDeleteDoc = async () => {
+    await apiService.deleteDocument(selectedId);
+    handleCloseDocDeletePopup();
   };
   return (
     <div className="sidebar-class">
@@ -367,6 +311,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
         buttonText="Create Document"
         isVisible={isCreateDocPopupVisible}
         onClose={handleCloseDocPopup}
+        onClick={handleCreateDocument}
       />
       {/*Delete Folder*/}
       <DeletePopUp
@@ -385,7 +330,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
         buttonText="Delete"
         subtitle="You will lost your all data"
         desc="Are you sure to delete document permanently?"
-        onClick={() => {}}
+        onClick={handleDeleteDoc}
         onClose={handleCloseDocDeletePopup}
       />
       {/*Log Out*/}

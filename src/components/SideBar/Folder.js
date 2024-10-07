@@ -253,7 +253,7 @@ const Folder = ({
   };
 
   const handleUpdateRename = async () => {
-    await apiService.renameFolder({ folderTitle }, folderId);
+    await apiService.renameFolder(folderTitle, folderId);
   };
 
   const handleOpenRenamePopUp = () => {
@@ -363,8 +363,11 @@ const Document = ({
   const [isActive, setIsActive] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isRenameVisible, setIsRenameVisible] = useState(false);
+  const [docTitle, setDoc] = useState(name);
   const menuRef = useRef(null);
   const titleRef = useRef(null);
+
+
   const handleMouseEnter = () => {
     console.log(docId, activeItem, "is doc not active");
     if (activeItem === docId) {
@@ -372,9 +375,6 @@ const Document = ({
     }
     setIsHovered(true);
   };
-  useEffect(() => {
-    setIsActive(activeItem === docId);
-  }, [activeItem, docId]);
 
   const handleMouseLeave = () => {
     if (activeItem === docId) {
@@ -394,7 +394,7 @@ const Document = ({
   };
   const handleOpenDeletePopup = (e) => {
     handleCloseMenu();
-    handleopendocumentdeletepopup();
+    handleopendocumentdeletepopup(docId);
   };
 
   const handleOpenRenamePopUp = () => {
@@ -403,6 +403,7 @@ const Document = ({
   };
 
   const handleCloseRenamePopUp = () => {
+    handleUpdateRename();
     setIsRenameVisible(false);
   };
 
@@ -421,9 +422,10 @@ const Document = ({
   const currentIcon =
     isHovered || isActive ? icons.activeDoc : icons.documentIcon;
   const tooltipId = "document-tooltip";
-  useEffect(() => {
-    console.log("inside folder", activeItem);
-  }, [activeItem]);
+
+  const handleUpdateRename = async () => {
+    await apiService.renameDocument(docTitle, docId);
+  };
   return (
     <div
       className={`show-row-space-between ${
@@ -431,7 +433,7 @@ const Document = ({
       }`}
       onClick={() => onClickDocument(docId)}
       data-tooltip-id={tooltipId}
-      data-tooltip-content={name}
+      data-tooltip-content={docTitle}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{ position: "relative" }}
@@ -448,10 +450,11 @@ const Document = ({
       {/*Rename*/}
       {isRenameVisible && (
         <RenamePopUp
-          title={name}
+          title={docTitle}
           referenceElement={titleRef.current}
           onClose={handleCloseRenamePopUp}
           exceptionRef={titleRef}
+          setTitle={setDoc}
         />
       )}
 
@@ -462,7 +465,7 @@ const Document = ({
           ref={titleRef}
           className={`folder-title ${isHovered || isActive ? "active" : ""}`}
         >
-          {name}
+          {docTitle}
         </span>
       </div>
       <img

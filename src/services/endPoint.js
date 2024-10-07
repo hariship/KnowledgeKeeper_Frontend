@@ -10,9 +10,12 @@ export const ENDPOINTS = {
   DELETE_CHANGE_REQUEST: `${API_BASE_URL}clients/${CLIENT_ID}/bytes/delete`,
   CREATE_CHANGE_REQUEST: `${API_BASE_URL}clients/${CLIENT_ID}/bytes/create`,
   GET_USER_TEAMSPACE: `${API_BASE_URL}clients/clientDetails?clientId=${CLIENT_ID}`,
-  GET_RECOMMENDATION_SINGLE_DOC: `${API_BASE_URL}clients/recommendations`,
   CREATE_FOLDER: `${API_BASE_URL}clients/${CLIENT_ID}/folders`,
+  CREATE_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
+  GET_RECOMMENDATION_SINGLE_DOC:(docId)=> `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
   RENAME_FOLDER: (folderId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}`,
   CHECK_USER_EXIST: `${API_BASE_URL}clients/users/exists`,
+  RENAME_DOCUMENT: (docId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}`,
 };

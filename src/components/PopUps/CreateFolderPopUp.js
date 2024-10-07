@@ -13,6 +13,7 @@ const CreateFolderPopUp = ({
   onClose,
   onClick,
 }) => {
+  const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   if (!isVisible) return null;
   const handleInputChange = (e) => {
@@ -21,7 +22,15 @@ const CreateFolderPopUp = ({
 
   const handleClosePopUp = () => {
     setInput("");
+    setLoading(false);
     onClose();
+  };
+
+  const handleButtonClick = async () => {
+    setLoading(true);
+    await onClick(input);
+    setInput("");
+    setLoading(false);
   };
 
   return (
@@ -46,14 +55,13 @@ const CreateFolderPopUp = ({
           </label>
         </div>
         <button
-          className={`popup-button ${input.trim() ? "" : "disabled-button"}`}
-          onClick={async () => {
-            await onClick(input);
-            setInput("");
-          }}
-          disabled={!input.trim()}
+          className={`popup-button ${input.trim()|| !loading? "" : "disabled-button"}`}
+          onClick={handleButtonClick}
+          disabled={!input.trim() || loading}
         >
-          {buttonText}
+          {buttonText} {loading && (
+            <span className="loader" style={{ marginLeft: "8px" }}></span>
+          )}
         </button>
       </div>
     </div>

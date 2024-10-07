@@ -193,6 +193,38 @@ class ApiService {
     }
   }
 
+  //Create Document
+  async createDocument(folderId, documentName) {
+    try {
+      const emptyHtmlContent = "<!DOCTYPE html>\n<html>\n<head>\n<title>Empty Document</title>\n</head>\n<body>\n</body>\n</html>";
+      const blob = new Blob([emptyHtmlContent], { type: "text/html" });
+      const file = new File([blob], "document.html", { type: "text/html" });
+      const formData = new FormData();
+      formData.append("file", file, "document.html");
+      formData.append("folderId", folderId);
+      formData.append("documentName", documentName);
+      const response = await axios.post(ENDPOINTS.CREATE_DOCUMENT, formData, {
+        headers: getHeaders(true),
+      });
+
+      if (response.data.status) {
+        console.log("Document uploaded successfully", response.data);
+        return response.data;
+      } else {
+        throw new Error("Failed to upload document");
+      }
+    } catch (error) {
+      console.error(
+        "Error uploading document:",
+        error.response?.data || error.message
+      );
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      // throw error;
+    }
+  }
+
   //Get Change Request (Open)
   async getOpenChangeRequest() {
     try {
@@ -209,8 +241,6 @@ class ApiService {
       throw error.response || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
     }
   }
-
-
 
   //TODO CHECK ERROR MESSAGE KEY FOR ALL API response.data.message
   //GET CHANGE REQUEST (CLOSED)
@@ -261,10 +291,14 @@ class ApiService {
     try {
       const requestBody = { byteId };
       console.log("Request Body:", requestBody);
-      const response = await axios.post(ENDPOINTS.DELETE_CHANGE_REQUEST,requestBody, {
-        headers: getHeaders(true),
-      });
-      
+      const response = await axios.post(
+        ENDPOINTS.DELETE_CHANGE_REQUEST,
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+
       // if (response.data.status === "success") {
       //   toast.success(
       //     response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
@@ -303,10 +337,10 @@ class ApiService {
   }
 
   //GET RECOMMENDATION FOR SINGLE DOCUMENT
-  async getRecommendationSingleDoc() {
+  async getRecommendationSingleDoc(docId) {
     try {
       const response = await axios.get(
-        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC,
+        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(docId),
         {
           headers: getHeaders(true),
         }
@@ -316,9 +350,11 @@ class ApiService {
     } catch (error) {
       console.error("Error Response:", error);
       toast.error(
-        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+        error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
       );
-      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+      throw (
+        error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
     }
   }
 
@@ -365,6 +401,40 @@ class ApiService {
       const response = await axios.delete(ENDPOINTS.RENAME_FOLDER(folderId), {
         headers: getHeaders(true),
       });
+      return response.data;
+    } catch (error) {
+      toast.error(
+        error.response?.error || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+
+  //Delete Document
+  async deleteDocument(docId) {
+    try {
+      const response = await axios.delete(ENDPOINTS.RENAME_DOCUMENT(docId), {
+        headers: getHeaders(true),
+      });
+      return response.data;
+    } catch (error) {
+      toast.error(
+        error.response?.error || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+  //RENAME DOCUMENT
+  async renameDocument(documentName, docId) {
+    try {
+      const requestBody = { documentName };
+      const response = await axios.put(
+        ENDPOINTS.RENAME_DOCUMENT(docId),
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
       return response.data;
     } catch (error) {
       toast.error(
