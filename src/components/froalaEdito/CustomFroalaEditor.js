@@ -39,7 +39,9 @@ const requestData = {
   request_id: "req-001",
   // request_text:"Simple Text",
   request_text:
-    "Do you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed?",
+    "Do you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to which need to be changedDo you have a section for Knowledge Keeper which need to ",
+  // request_text:
+  //   "Do you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed Do you have a section for Knowledge Keeper which need to be changedDo you have a section for Knowledge Keeper which need to be changed?",
   sender: "John Doe",
   date_time: "2024-07-12T14:00:00",
   documents: [
@@ -126,26 +128,25 @@ const FunctionalEditor = () => {
   const changedModelRef = useRef(model);
   const totalDocuments = requestData.documents.length;
   const [activeRecommendation, setActiveRecommendation] = useState("");
-  const [changeRectHeight, setChangeRectHeight] = useState(100);
-  const changeRequestRef = useRef(null);
-
+  const [editorWidth, setEditorWidth] = useState(0);
+  const editorRef = useRef(null);
   useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
+    const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
-        setChangeRectHeight(entry.contentRect.height); 
+        setEditorWidth(entry.contentRect.width);
       }
     });
 
-    if (changeRequestRef.current) {
-      observer.observe(changeRequestRef.current); 
+    if (editorRef.current) {
+      resizeObserver.observe(editorRef.current);
     }
 
     return () => {
-      if (changeRequestRef.current) {
-        observer.unobserve(changeRequestRef.current); 
+      if (editorRef.current) {
+        resizeObserver.unobserve(editorRef.current);
       }
     };
-  }, []);
+  }, [editorRef]);
 
   useEffect(() => {
     changedModelRef.current = model;
@@ -331,6 +332,7 @@ const FunctionalEditor = () => {
         <div className="change-request">
           {showChangeRequest && (
             <ChangeRequest
+              width={editorWidth}
               requester={sender}
               date={date}
               time={time}
@@ -342,50 +344,51 @@ const FunctionalEditor = () => {
             />
           )}
           {/* Froala Editor */}
-          <div style={{ height: `${changeRectHeight}px` }}></div>
-          <FroalaEditorComponent
-            tag="textarea"
-            model={model}
-            onModelChange={handleModelChange}
-            config={{
-              toolbarSticky: true,
-              editorClass: "froala-editor",
-              padding: 0,
-              spellcheck: true,
-              attribution: false,
-              useClasses: false,
-              fullPage: true,
-              heightMin: 100,
-              heightMax: 1500,
-              toolbarVisibleWithoutSelection: true,
-              placeholderText: "Heading",
-              charCounterCount: true,
-              toolbarContainer: "#toolbar-container",
-              events: {
-                initialized: function () {
-                  const secondToolbar =
-                    document.querySelector(".fr-second-toolbar");
-                  if (secondToolbar) {
-                    secondToolbar.remove();
-                  }
+          <div ref={editorRef}>
+            <FroalaEditorComponent
+              tag="textarea"
+              model={model}
+              onModelChange={handleModelChange}
+              config={{
+                toolbarSticky: true,
+                editorClass: "froala-editor",
+                padding: 0,
+                spellcheck: true,
+                attribution: false,
+                useClasses: false,
+                fullPage: true,
+                heightMin: 100,
+                heightMax: 1500,
+                toolbarVisibleWithoutSelection: true,
+                placeholderText: "Heading",
+                charCounterCount: true,
+                toolbarContainer: "#toolbar-container",
+                events: {
+                  initialized: function () {
+                    const secondToolbar =
+                      document.querySelector(".fr-second-toolbar");
+                    if (secondToolbar) {
+                      secondToolbar.remove();
+                    }
+                  },
+                  focus: function (e, editor) {},
+                  contentChanged: async function () {
+                    const updatedModel = this.html.get();
+                    const updatedModelWithLocation =
+                      addDataLocationAttributes(updatedModel);
+                    placeCircles(
+                      model,
+                      requestData.documents[currentDocIndex].recommendations
+                    );
+                    changedModelRef.current = updatedModelWithLocation;
+                    // const file = new Blob([updatedModel], { type: "text/html" });
+                    // console.log(file);
+                    // await apiService.uploadDocument(file, "clientId", "clientName");
+                  },
                 },
-                focus: function (e, editor) {},
-                contentChanged: async function () {
-                  const updatedModel = this.html.get();
-                  const updatedModelWithLocation =
-                    addDataLocationAttributes(updatedModel);
-                  placeCircles(
-                    model,
-                    requestData.documents[currentDocIndex].recommendations
-                  );
-                  changedModelRef.current = updatedModelWithLocation;
-                  // const file = new Blob([updatedModel], { type: "text/html" });
-                  // console.log(file);
-                  // await apiService.uploadDocument(file, "clientId", "clientName");
-                },
-              },
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
         <div>
           {requestData.documents[currentDocIndex].recommendations.map(

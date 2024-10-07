@@ -43,7 +43,7 @@ import activeTeam from "./active-team.svg";
 import activeRightArrow from "./active-right-arrow.svg";
 import activeCloseIcon from "./active-close-icon.svg";
 import resolveIcon from './resolve-icon.svg';
-// import loginAI from './login-ai-feature.svg';
+import kkLogo from './kk-logo.svg';
 // import loginAI from './login-ai-feature.svg';
 // import loginAI from './login-ai-feature.svg';
 // import loginAI from './login-ai-feature.svg';
@@ -53,7 +53,7 @@ import resolveIcon from './resolve-icon.svg';
 // import loginAI from './login-ai-feature.svg';
 
 
-const icons = {
+const icons = {kkLogo,
   activeTeam,
   activeRightArrow,resolveIcon,
   activeCloseIcon,

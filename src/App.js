@@ -12,6 +12,7 @@ import HomePage from "./pages/homePage";
 import { AuthProvider } from "./components/ProtectedRoute/AuthContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import HubspotForm from "./pages/ContactUs";
 
 function App() {
   const isAuthenticated = () => {
@@ -34,6 +35,7 @@ function App() {
             }
           />
           <Route path="/home/*" element={<HomePage />} />
+          <Route path="/contact-us" element={<HubspotForm />} />
         </Routes>
       </Router>
     </AuthProvider>

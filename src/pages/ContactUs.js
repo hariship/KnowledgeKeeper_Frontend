@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import "../style.css";
+
 
 const HubspotForm = () => {
   useEffect(() => {
@@ -32,9 +34,9 @@ const HubspotForm = () => {
   }, []);
 
   return (
-    <div>
-      <h2>Contact Us</h2>
-      <div id="hubspotForm"></div>
+    <div className="hubspot-form-container">
+      <h2 className="hubspot-form-title">Contact Us</h2>
+      <div id="hubspotForm" className="hubspot-form"></div>
     </div>
   );
 };

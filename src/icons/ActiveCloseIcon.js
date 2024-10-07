@@ -1,19 +1,19 @@
 import * as React from "react";
-const SvgDoneCheck = (props) => (
+const SvgActiveCloseIcon = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width={24}
-    height={24}
+    width={20}
+    height={20}
     fill="none"
     {...props}
   >
     <path
-      stroke="#6E6E6E"
+      stroke="teal"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2}
-      d="M20 6 9 17l-5-5"
+      d="M15 5 5 15M5 5l10 10"
     />
   </svg>
 );
-export default SvgDoneCheck;
+export default SvgActiveCloseIcon;

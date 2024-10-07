@@ -16,6 +16,7 @@
   --textColor: #727272;
   --darkGrey: #363636;
   --lightTextColor: #9b9b9b;
+  --greyOutButton:#c3c1c1;
   --lightestGreyColor: #e6e6e6;
   --borderColor: #dfdfdf;
   --bgColor: #fbfbfb;
@@ -34,6 +35,7 @@
   --twelve-font-size: clamp(8px, 1.3vw, 12px);
   --fourteen-font-size: clamp(10px, 1.5vw, 14px);
   --sixteen-font-size: clamp(12px, 1.65vw, 16px);
+  --seventeen-font-size: clamp(13px, 1.67vw, 17px);
   --eighteen-font-size: clamp(14px, 2.0vw, 18px);
   --twenty-font-size: clamp(16px, 2.4vw, 20px);
   --twenty-two-font-size: clamp(18px, 2.4vw, 22px);
@@ -86,7 +88,7 @@
 
 .tab-buttons {
   display: flex;
-  margin: 0px !important;
+  /* margin: 0px ; */
 }
 
 .tab-buttons button {
@@ -109,7 +111,7 @@
 }
 
 .tab-content {
-  margin-top: 0.4rem;
+  margin-top: 0.8rem;
   flex-grow: 1;
   border-radius: 4px;
   overflow-y: auto;
@@ -177,6 +179,7 @@
 
 .change-request-option {
   display: flex;
+  margin: 0px;
   flex-direction: row;
   align-items: center;
   cursor: pointer;
@@ -189,8 +192,9 @@
 } */
 
 .change-request-option p {
-  font-size: var(--sixteen-font-size);
+  font-size: var(--fourteen-font-size);
   font-weight: 600;
+  margin: 0px;
   color: var(--textColor);
   position: relative;
   display: inline-block;
@@ -206,4 +210,50 @@
   height: 1px;
   background-color: var(--lightTextColor);
 }
+
+
+
+/*******************************CONTACT US******************************************/
+.hubspot-form-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  height: 100%; 
+  padding: 1rem 2rem;
+}
+
+.hubspot-form-title {
+  font-size: var(--twenty-four-font-size);
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.hubspot-form {
+  width: 100%;
+  max-width: 600px;
+  align-items: center;
+  height: auto; 
+  padding: 1rem;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+  border-radius: 8px; 
+}
+
+@media (max-width: 768px) {
+  .hubspot-form {
+    max-width: 90%; 
+  }
+
+ 
+}
+
+@media (max-width: 480px) {
+  .hubspot-form {
+    max-width: 100%; 
+  }
+
+ 
+}
+
 

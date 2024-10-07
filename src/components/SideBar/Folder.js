@@ -3,10 +3,10 @@ import "../../style.css";
 import "./sidebar-style.css";
 import icons from "../../assets/icons";
 import DropdownMenu from "../PopUps/DropDown";
-import DeletePopUp from "../PopUps/DeletePopUp";
 import RenamePopUp from "../PopUps/RenamePopUp";
 // import InviteMemebersPopUp from "../PopUps/InviteMembersPopUp";
 import CustomTooltip from "../PopUps/CustomToolTip";
+import { apiService } from "../../services/apiService";
 
 // const TeamSpace = ({
 //   title,
@@ -197,17 +197,20 @@ import CustomTooltip from "../PopUps/CustomToolTip";
 /************************************************ FOLDER ***************************************/
 
 const Folder = ({
+  folderId,
   title,
   docList,
   onClickCreateDoc,
   onClickDocument,
+  handleOpenFolderDeletePopup,
+  handleopendocumentdeletepopup,
   activeItem,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isDeletePopupVisible, setIsDeletePopupVisible] = useState(false);
   const [isRenameVisible, setIsRenameVisible] = useState(false);
+  const [folderTitle, setTitle] = useState(title);
   const menuRef = useRef(null);
   const titleRef = useRef(null);
   const tooltipId = "folder-tooltip";
@@ -230,6 +233,7 @@ const Folder = ({
     e.stopPropagation();
     setShowDropdown((prev) => !prev);
   };
+
   const handleCloseMenu = () => {
     setShowDropdown(false);
   };
@@ -243,13 +247,13 @@ const Folder = ({
     e.stopPropagation();
     onClickCreateDoc();
   };
-  const handleOpenDeletePopup = (e) => {
-    setIsDeletePopupVisible(true);
+  const handleOpenDeletePopup = () => {
+    handleCloseMenu();
+    handleOpenFolderDeletePopup(folderId);
   };
 
-  const handleCloseDeletePopup = () => {
-    handleCloseMenu();
-    setIsDeletePopupVisible(false);
+  const handleUpdateRename = async () => {
+    await apiService.renameFolder({ folderTitle }, folderId);
   };
 
   const handleOpenRenamePopUp = () => {
@@ -258,6 +262,7 @@ const Folder = ({
   };
 
   const handleCloseRenamePopUp = () => {
+    handleUpdateRename();
     setIsRenameVisible(false);
   };
   const dropdownOptions = [
@@ -274,7 +279,7 @@ const Folder = ({
   ];
 
   return (
-    <div className="folder">
+    <div>
       <div
         className="show-row-space-between"
         data-tooltip-id={tooltipId}
@@ -289,7 +294,7 @@ const Folder = ({
             ref={titleRef}
             className={`folder-title ${isHovered ? "active" : ""}`}
           >
-            {title}
+            {folderTitle}
           </span>
         </div>
         <img
@@ -299,15 +304,6 @@ const Folder = ({
           src={icons.activeMenuIcon}
           className="hide-icon"
         />
-        {showDropdown && (
-          <DropdownMenu
-            referenceElement={menuRef.current}
-            options={dropdownOptions}
-            onClose={handleCloseMenu}
-            exceptionRef={menuRef}
-          />
-        )}
-
         <CustomTooltip id={tooltipId} />
         <img
           alt="add"
@@ -321,32 +317,31 @@ const Folder = ({
           {docList.map((e, index) => (
             <Document
               key={index}
-              docId={e.doc_id}
-              name={e.doc_name}
+              docId={e.id}
+              name={e.documentName}
+              handleopendocumentdeletepopup={handleopendocumentdeletepopup}
               onClickDocument={onClickDocument}
               activeItem={activeItem}
             />
           ))}
         </div>
       )}
-      {/*Delete Option*/}
-      <DeletePopUp
-        isVisible={isDeletePopupVisible}
-        title="Delete Folder"
-        buttonText="Delete"
-        subtitle="You will lost your all documents"
-        desc="Are you sure to delete folder permanently?"
-        onClick={() => {}}
-        onClose={handleCloseDeletePopup}
-      />
-
+      {showDropdown && (
+        <DropdownMenu
+          referenceElement={menuRef.current}
+          options={dropdownOptions}
+          onClose={handleCloseMenu}
+          exceptionRef={menuRef}
+        />
+      )}
       {/*Rename*/}
       {isRenameVisible && (
         <RenamePopUp
-          title={title}
+          title={folderTitle}
           referenceElement={titleRef.current}
           onClose={handleCloseRenamePopUp}
           exceptionRef={titleRef}
+          setTitle={setTitle}
         />
       )}
     </div>
@@ -357,11 +352,16 @@ export default Folder;
 
 /**********************************************DOCUMENT************************************8*/
 
-const Document = ({ docId, name, onClickDocument, activeItem }) => {
+const Document = ({
+  docId,
+  name,
+  onClickDocument,
+  activeItem,
+  handleopendocumentdeletepopup,
+}) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [isDeletePopupVisible, setIsDeletePopupVisible] = useState(false);
   const [isRenameVisible, setIsRenameVisible] = useState(false);
   const menuRef = useRef(null);
   const titleRef = useRef(null);
@@ -393,11 +393,8 @@ const Document = ({ docId, name, onClickDocument, activeItem }) => {
     setShowDropdown(false);
   };
   const handleOpenDeletePopup = (e) => {
-    setIsDeletePopupVisible(true);
-  };
-
-  const handleCloseDeletePopup = () => {
-    setIsDeletePopupVisible(false);
+    handleCloseMenu();
+    handleopendocumentdeletepopup();
   };
 
   const handleOpenRenamePopUp = () => {
@@ -457,16 +454,7 @@ const Document = ({ docId, name, onClickDocument, activeItem }) => {
           exceptionRef={titleRef}
         />
       )}
-      {/*Delete Option*/}
-      <DeletePopUp
-        isVisible={isDeletePopupVisible}
-        title="Delete Document"
-        buttonText="Delete"
-        subtitle="You will lost your all data"
-        desc="Are you sure to delete document permanently?"
-        onClick={() => {}}
-        onClose={handleCloseDeletePopup}
-      />
+
       <CustomTooltip id={tooltipId} place="right" />
       <div className="document-content">
         <img src={currentIcon} alt="doc" />

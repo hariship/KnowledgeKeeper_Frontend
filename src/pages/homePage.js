@@ -8,7 +8,6 @@ import IntegrationPage from "./IntegrationPage";
 import FunctionalEditor from "../components/froalaEdito/CustomFroalaEditor";
 import { useAuth } from "../components/ProtectedRoute/AuthContext";
 import { useNavigate } from "react-router-dom";
-import HubspotForm from "./ContactUs";
 
 const HomePage = () => {
   const { setIsLoggedIn } = useAuth();
@@ -20,7 +19,7 @@ const navigate=useNavigate();
     const token = sessionStorage.getItem('authToken');
     if (token) {
       console.log(token);
-      setIsLoggedIn(true); // Set login state on mount
+      setIsLoggedIn(true); 
     } else {
       console.log("here in else");
       navigate("/")
@@ -36,12 +35,12 @@ const navigate=useNavigate();
       setIsTeamspaceOpen(true)
       const id = path.split("/").pop(); 
       setActiveItem(id); 
-    } else if (path.includes("contact-us")) {
-      setActiveItem("Contact Us");
+    } else if (path.includes("feedback")) {
+      setActiveItem("Feedback");
     } else {
       setActiveItem("");
     }
-  }, [location]);
+  }, [location,setIsLoggedIn,navigate]);
 
   return (
     <div className="home">
@@ -52,9 +51,6 @@ const navigate=useNavigate();
           <Route path="trash" element={<TrashPage />} />
           <Route path="integration" element={<IntegrationPage />} />
           <Route path="document-edit/:id" element={<FunctionalEditor />} />
-          <Route path="contact-us" element={<HubspotForm />} />
-
-
         </Routes>
       </div>
     </div>

@@ -1,10 +1,9 @@
 import * as React from "react";
-
 const SvgDefaultChangeRequestScreen = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 122 122" 
-   
+    width={122}
+    height={122}
     fill="none"
     {...props}
   >
@@ -21,5 +20,4 @@ const SvgDefaultChangeRequestScreen = (props) => (
     </defs>
   </svg>
 );
-
 export default SvgDefaultChangeRequestScreen;

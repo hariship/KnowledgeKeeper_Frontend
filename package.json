@@ -2,6 +2,7 @@
   "name": "knowledge-keeper",
   "version": "0.1.0",
   "private": true,
+  "proxy": "https://api-core.knowledgekeeper.ai/api/",
   "dependencies": {
     "@popperjs/core": "^2.11.8",
     "@react-oauth/google": "^0.12.1",
@@ -10,7 +11,9 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
     "froala-editor": "^4.2.1",
+    "google-auth-library": "^9.14.1",
     "html-react-parser": "^5.1.12",
+    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-froala-wysiwyg": "^4.2.1",
@@ -59,5 +62,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1"
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../style.css";
 import DefaultAllRequestTab from "../components/AllRequest/DefaultScreen";
 import icons from "../assets/icons";
@@ -8,180 +8,60 @@ import AddChangeRequestPopUp from "../components/PopUps/AddChangeRequestPopUp";
 import DeletePopUp from "../components/PopUps/DeletePopUp";
 import ResolveChangeRequestPopUp from "../components/PopUps/ResolveChangeRequestPopUp.js";
 import SvgAddIcon from "../icons/AddIcon.js";
-
-const openRequestList = [
-  {
-    title:
-      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 0,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title:
-      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 0,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title:
-      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 0,
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-    ai_edits: 25,
-  },
-];
-
-const resolvedRequestList = [
-  {
-    title:
-      "Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-  {
-    title: "Do you have section for Anchor?",
-    employee_name: "Viresh Dhruv",
-    date: "12 July ‘24, 02:00pm",
-  },
-];
+import { apiService } from "../services/apiService.js";
+import SkeletonLoaderComponent from "../components/loading-screen/SkeletonLoaderComponent.js";
 
 const AllRequests = () => {
   const [activeTab, setActiveTab] = useState("open");
   const [showAddChangeRequestPopUp, setAddChangeRequestPopUp] = useState(false);
   const [showDeleteDocPopUp, setDeleteDocPopUp] = useState(false);
   const [showZeroAIEditPopUp, setZeroAIEditPopUp] = useState(false);
+  const [openRequestList, setOpenRequestList] = useState([]);
+  const [resolvedRequestList, setResolvedRequestList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedByte, setSelectedByte] = useState("");
+  useEffect(() => {
+    getOpenRequests();
+  }, []);
 
+  const getOpenRequests = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getOpenChangeRequest();
+      console.log("here is the data", data);
+      setOpenRequestList(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching open requests:", error);
+      setOpenRequestList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getClosedRequests = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getClosedRequest();
+      setResolvedRequestList(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching resolved requests:", error);
+      setResolvedRequestList([]);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleTabChange = (tab) => {
+    if (tab === "open") {
+      getOpenRequests();
+    } else {
+      getClosedRequests();
+    }
     setActiveTab(tab);
   };
 
-  const handleDeleteDocPopUp = () => {
+  const handleDeleteDocPopUp = (byteId) => {
+    console.log("here is the byte", byteId);
+    setSelectedByte(byteId);
     setDeleteDocPopUp(true);
   };
   const handleCloseZeroEditPopUp = () => {
@@ -194,6 +74,17 @@ const AllRequests = () => {
 
   const handleCloseDeleteDocPopUp = () => {
     setDeleteDocPopUp(false);
+  };
+
+  const handleDeleteByte = async () => {
+    try {
+      await apiService.deleteChangeRequest(selectedByte);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      getOpenRequests();
+      handleCloseDeleteDocPopUp();
+    }
   };
 
   const handlePopupToggle = () => {
@@ -235,7 +126,10 @@ const AllRequests = () => {
         )}
       </div>
       <div className="tab-content">
-        {activeTab === "open" ? (
+        {" "}
+        {loading ? (
+          <SkeletonLoaderComponent length={5} />
+        ) : activeTab === "open" ? (
           openRequestList.length === 0 ? (
             <DefaultAllRequestTab
               text="No open requests"
@@ -247,14 +141,16 @@ const AllRequests = () => {
             openRequestList.map((item, index) => (
               <OpenRequestComponent
                 key={index}
-                title={item.title}
-                employee_name={item.employee_name}
-                date={item.date}
-                aiEdits={item.ai_edits}
+                title={item.byteInfo}
+                employee_name={item.clientId.clientName}
+                date={item.clientId.createdAt}
+                aiEdits={item.noOfRecommendations}
                 onClick={() => {
-                  handleRequestClick(item.ai_edits);
+                  handleRequestClick(item.noOfRecommendations);
                 }}
-                onClickDelete={handleDeleteDocPopUp}
+                onClickDelete={() => {
+                  handleDeleteDocPopUp(item.id);
+                }}
               />
             ))
           )
@@ -262,16 +158,15 @@ const AllRequests = () => {
           <DefaultAllRequestTab
             text="No requests are resolved"
             buttonText="Check Open Request"
-            
             onClick={() => handleTabChange("open")}
           />
         ) : (
           resolvedRequestList.map((item, index) => (
             <ResolvedRequestComponet
               key={index}
-              title={item.title}
-              employee_name={item.employee_name}
-              date={item.date}
+              title={item.byteInfo}
+              employee_name={item.clientId.clientName}
+              date={item.clientId.createdAt} //todo check key
             />
           ))
         )}
@@ -280,14 +175,18 @@ const AllRequests = () => {
       <AddChangeRequestPopUp
         isVisible={showAddChangeRequestPopUp}
         onClose={handleClosePopup}
+        onClick={() => {
+          getOpenRequests();
+        }}
       />
       <DeletePopUp
-      buttonText="Delete"
+        buttonText="Delete"
         isVisible={showDeleteDocPopUp}
-        title="Delete Document"
-        subtitle="All the applied changes will be lost"
-        desc="Are you sure to delete the document?"
+        title="Delete Request"
+        subtitle="pending pass here"
+        desc="Are you sure to delete the request?"
         onClose={handleCloseDeleteDocPopUp}
+        onClick={handleDeleteByte}
       />
       <ResolveChangeRequestPopUp
         isVisible={showZeroAIEditPopUp}

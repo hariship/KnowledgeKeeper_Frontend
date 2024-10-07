@@ -7,6 +7,8 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import SvgBackArrow from "../icons/BackArrow";
 import { apiService } from "../services/apiService";
+import axios from "axios";
+
 const featureItems = [
   {
     icon: icons.loginOrganise,
@@ -38,6 +40,7 @@ const InputField = ({
   warningMessage,
   toggleVisibility,
   isPasswordVisible,
+  loading,
 }) => {
   return (
     <label className="input-label">
@@ -50,6 +53,7 @@ const InputField = ({
           value={value}
           onChange={onChange}
         />
+        {loading && <div className="spinner"></div>}
         {type === "password" && (
           <img
             style={{ height: "20px", width: "20px" }}
@@ -81,12 +85,14 @@ const LoginPage = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [createPasswordVisible, setCreatePasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-  const [newUser, setNewUser] = useState(false);
+  const [userExist, setUserExist] = useState("");
+  const [isCheckingUser, setIsCheckingUser] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Validate login form for existing users
-    if (!newUser) {
+    if (userExist) {
       setIsFormValid(isEmailValid && password.length >= 6);
     }
     // Validate registration form for new users
@@ -97,7 +103,29 @@ const LoginPage = () => {
           confirmPassword === createPassword
       );
     }
-  }, [isEmailValid, password, createPassword, confirmPassword, newUser]);
+  }, [isEmailValid, password, createPassword, confirmPassword, userExist]);
+
+  const handleEmailButton = async () => {
+    setLoading(true);
+    if (!userExist) {
+      await handleRegister();
+    } else {
+      await handleLogin();
+    }
+    setLoading(false);
+  };
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const checkUserExists = async (email) => {
+    try {
+      const response = await apiService.checkUserExist(email);
+      setUserExist(response);
+    } catch (error) {
+      console.error("Error checking if user exists:", error);
+      setIsCheckingUser(false);
+    }
+  };
+
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
@@ -110,10 +138,12 @@ const LoginPage = () => {
     setConfirmPasswordVisible(!confirmPasswordVisible);
   };
   const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setPassword("");
+    setCreatePassword("");
+    setConfirmPassword("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     return emailRegex.test(email);
   };
-
   const validatePassword = (value) => {
     const passwordRegex = /^.{6,}$/;
     return passwordRegex.test(value);
@@ -137,23 +167,48 @@ const LoginPage = () => {
     setConfirmPasswordWarning(value !== createPassword);
   };
 
-  const handleEmailChange = (e) => {
-    //TODO
-    setNewUser(false);
+  const handleEmailChange = async (e) => {
     const value = e.target.value;
     setEmail(value);
     const isValid = validateEmail(value);
     setIsEmailValid(isValid);
     setShowEmailWarning(!isValid && value.length > 4);
+
+    if (isValid) {
+      setIsCheckingUser(true);
+      await checkUserExists(value);
+      await delay(500);
+      setIsCheckingUser(false);
+    }
   };
+
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log("here is cred", credentialResponse);
     try {
-      const data = await apiService.loginWithGoogle(
-        credentialResponse.access_token
-      );
-      console.log("Login successful:", data);
-      navigate("/home/all-requests");
+      const userInfo = await axios
+        .get("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: {
+            Authorization: `Bearer ${credentialResponse.access_token}`,
+          },
+        })
+        .then((res) => res.data);
+      const response = await apiService.checkUserExist(userInfo.email);
+      if (response) {
+        const data = await apiService.loginWithGoogle(
+          credentialResponse.access_token,
+          userInfo.email
+        );
+        if (data.status === "success") {
+          navigate("/home/all-requests");
+        }
+      } else {
+        const data = await apiService.loginWithGoogle(
+          credentialResponse.access_token,
+          userInfo.email
+        );
+        if (data.status === "success") {
+          navigate("/home/all-requests");
+        }
+      }
     } catch (e) {
       console.error("Login failed:", e);
     }
@@ -168,8 +223,7 @@ const LoginPage = () => {
     onError: handleGoogleFailure,
   });
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     try {
       const data = await apiService.login(email, password);
       console.log("Login successful:", data);
@@ -220,6 +274,50 @@ const LoginPage = () => {
       },
     },
   ];
+  const renderPasswordFields = () => {
+    if (isCheckingUser === "" || userExist === undefined) {
+      return null;
+    }
+    if (!isCheckingUser) {
+      return (
+        <div>
+          {userExist === false ? (
+            <>
+              <InputField
+                label="Create Password"
+                type="password"
+                placeholder="Enter password"
+                value={createPassword}
+                onChange={handleCreatePasswordChange}
+                toggleVisibility={toggleCreatePasswordVisibility}
+                isPasswordVisible={createPasswordVisible}
+              />
+              <InputField
+                label="Re-enter Password"
+                type="password"
+                placeholder="Enter password"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                toggleVisibility={toggleConfirmPasswordVisibility}
+                isPasswordVisible={confirmPasswordVisible}
+              />
+            </>
+          ) : userExist === true ? (
+            <InputField
+              label="Password"
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={handlePasswordChange}
+              toggleVisibility={togglePasswordVisibility}
+              isPasswordVisible={passwordVisible}
+            />
+          ) : null}
+        </div>
+      );
+    }
+    return null;
+  };
 
   const renderForm = () => {
     switch (activeView) {
@@ -286,43 +384,9 @@ const LoginPage = () => {
                   onChange={handleEmailChange}
                   showWarning={showEmailWarning}
                   warningMessage="*Please enter a valid email address."
+                  loading={isCheckingUser}
                 />
-                {isEmailValid && (
-                  <div>
-                    {newUser ? (
-                      <>
-                        <InputField
-                          label="Create Password"
-                          type="password"
-                          placeholder="Enter password"
-                          value={createPassword}
-                          onChange={handleCreatePasswordChange}
-                          toggleVisibility={toggleCreatePasswordVisibility}
-                          isPasswordVisible={createPasswordVisible}
-                        />
-                        <InputField
-                          label="Re-enter Password"
-                          type="password"
-                          placeholder="Enter password"
-                          value={confirmPassword}
-                          onChange={handleConfirmPasswordChange}
-                          toggleVisibility={toggleConfirmPasswordVisibility}
-                          isPasswordVisible={confirmPasswordVisible}
-                        />
-                      </>
-                    ) : (
-                      <InputField
-                        label="Password"
-                        type="password"
-                        placeholder="Enter password"
-                        value={password}
-                        onChange={handlePasswordChange}
-                        toggleVisibility={togglePasswordVisibility}
-                        isPasswordVisible={passwordVisible}
-                      />
-                    )}
-                  </div>
-                )}
+                {renderPasswordFields()}
                 {showConfirmPasswordWarning && (
                   <span className="email-warning">
                     *Password does not match the confirm password.
@@ -334,14 +398,27 @@ const LoginPage = () => {
                   </span>
                 )}
                 <button
-                  onClick={newUser ? handleRegister : handleLogin}
-                  className={`dynamic-button ${isFormValid ? "" : "disabled"}`}
+                  onClick={handleEmailButton}
+                  className={`dynamic-button ${isFormValid ? "" : "disabled"} ${
+                    loading ? "loading" : ""
+                  }`}
                   type="submit"
                   disabled={
-                    !isFormValid || (newUser && showConfirmPasswordWarning)
+                    loading ||
+                    !isFormValid ||
+                    (!userExist && showConfirmPasswordWarning)
                   }
                 >
-                  {newUser ? "Register" : "Log In"}
+                  {" "}
+                  <span style={{ display: "flex", alignItems: "center" }}>
+                    {!userExist ? "Register" : "Log In"}{" "}
+                    {loading && (
+                      <span
+                        className="loader"
+                        style={{ marginLeft: "8px" }}
+                      ></span>
+                    )}
+                  </span>
                 </button>
               </form>
             </div>
@@ -372,6 +449,10 @@ const LoginPage = () => {
     }
   };
 
+  const handleContactUs = () => {
+    navigate("/contact-us");
+  };
+
   return (
     <div className="login-page-container">
       <div className="login-content-wrapper">
@@ -392,7 +473,9 @@ const LoginPage = () => {
         <div className="login-container">{renderForm()}</div>
       </div>
       <div className="below-text">
-        <span className="privacy-policy">Privacy Policy</span>
+        <span onClick={handleContactUs} className="contact-us">
+          Contact Us
+        </span>
         <span className="terms-conditions">Terms & Conditions</span>
       </div>
     </div>

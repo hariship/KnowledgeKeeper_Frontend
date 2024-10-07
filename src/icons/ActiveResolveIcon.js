@@ -1,5 +1,5 @@
 import * as React from "react";
-const SvgResolveIcon = (props) => (
+const SvgActiveResolveIcon = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={18}
@@ -8,11 +8,11 @@ const SvgResolveIcon = (props) => (
     {...props}
   >
     <path
-      stroke="#727272"
+      stroke="#066"
       strokeLinecap="round"
       strokeLinejoin="round"
       d="m5.25 9.501 2.5 2.5 5-5m4.583 2.5a8.333 8.333 0 1 1-16.667 0 8.333 8.333 0 0 1 16.667 0"
     />
   </svg>
 );
-export default SvgResolveIcon;
+export default SvgActiveResolveIcon;

@@ -23,36 +23,46 @@
   background-color: white;
   padding: 20px;
   border-radius: 8px;
-  min-width: 20vw;
-  justify-content: center;
-  align-items: center;
+  max-width: 35%;
+  min-width: 35%;
   box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
   position: relative;
   text-align: center;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   transform: translateY(-20px);
   opacity: 0;
   transition: transform 0.3s ease, opacity 0.3s ease;
+  user-select: none;
 }
 
 .popup-overlay.show .popup-content {
   transform: translateY(0);
   opacity: 1;
 }
+
 .teal-button,
 .popup-button {
+  width: 52%;
   align-items: center;
   background-color: var(--darkTeal);
   color: white;
-  font-size: 16px;
+  font-size: var(--sixteen-font-size);
   font-weight: bold;
-  padding: 10px 100px;
+  padding: 10px 10px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
 }
 
+.popup-button:disabled,
+.popup-button.disabled-button {
+  background-color: grey; 
+  /* cursor: not-allowed; */
+  opacity: 0.6; 
+}
 .show-row-space-between-header {
   display: flex;
   width: 100%;
@@ -73,6 +83,17 @@
   justify-content: start;
 }
 
+.cross-icon {
+  width: 19px;
+  height: 19px;
+  cursor: pointer;
+}
+
+.cross-icon:hover {
+  color: var(--darkTeal);
+  stroke-width: 2;
+}
+
 .show-column p {
   font-size: 14px;
   color: var(--textColor);
@@ -85,14 +106,15 @@
   flex-direction: column;
   justify-content: start;
   align-items: start;
-  font-size: 14px;
+  font-size: var(--fourteen-font-size);
   text-align: start;
   color: var(--lightTextColor);
   font-weight: 400;
+  cursor: default !important;
 }
 
 .header-subheading-content h1 {
-  font-size: 16px;
+  font-size: var(--sixteen-font-size);
   text-align: start;
   color: var(--darkGrey);
   font-weight: 600;
@@ -101,13 +123,12 @@
 }
 
 .text-form-field-popup {
-  margin: 26px 0px;
+  margin: 20px 0px;
   display: flex;
   flex-direction: column;
-  width: 95%;
-  min-width: 450px;
-  margin-right: 20px;
-  font-size: 16px;
+  width: auto;
+  min-width: 100%;
+  font-size: var(--sixteen-font-size);
   font-weight: 600;
   color: var(--darkGrey);
   align-items: start;
@@ -115,27 +136,27 @@
 }
 
 .text-form-field-popup input {
-  width: 100%;
+  width: 97%;
   margin-top: 5px !important;
   border: 1px solid #dbdbdb !important;
   border-radius: 8px;
   padding: 10px;
-  font-size: 14px !important;
+  font-size: var(--fourteen-font-size) !important;
   color: var(--textColor) !important;
   outline: none !important;
 }
 
 .add-request-form {
-  width: 104%;
+  width: 100%;
   margin-right: 20px;
   margin-top: 5px !important;
   border: 1px solid #dbdbdb !important;
   border-radius: 8px;
   padding: 10px;
-  font-size: 14px !important;
+  font-size: var(--fourteen-font-size) !important;
   color: var(--textColor) !important;
   outline: none !important;
-  height: 18vh;
+  min-height: 18vh;
   box-sizing: border-box !important;
   resize: none;
   overflow: auto;
@@ -144,15 +165,27 @@
 }
 
 .delete-button {
-  width: 427px;
+  max-width: 55%;
+  min-width: 55%;
+  display: flex;
+  justify-content: center;
+  align-items: center; 
   background-color: white;
   border: 1px solid var(--red10-color);
-  font-size: 16px;
+  font-size: var(--sixteen-font-size);
   color: var(--red10-color);
   font-weight: 600;
-  padding: 10px 0px;
+  position: relative;
+  padding: 10px 16px;
   cursor: pointer;
   border-radius: 8px;
+}
+
+.delete-button.loading{
+  background-color: var(--greyOutButton) ;
+  border: var(--greyOutButton) ;
+  cursor: wait;
+  color: white;
 }
 
 .grey-button {
@@ -178,7 +211,6 @@
   padding: 10px 20px !important;
 }
 
-
 .email-input-container {
   margin-top: 10px;
   display: flex;
@@ -187,9 +219,9 @@
   overflow-y: auto;
   border: 1px solid #dbdbdb;
   border-radius: 8px;
-  padding:6px 10px;
+  padding: 6px 10px;
   width: 100%;
-  max-width:  650px;
+  max-width: 650px;
   background-color: white;
 }
 
@@ -223,7 +255,7 @@
   padding: 5px 0;
 }
 
-.input-form-field-popup{
+.input-form-field-popup {
   margin: 26px 0px;
   display: flex;
   flex-direction: column;
@@ -236,7 +268,6 @@
   align-items: start;
   justify-content: start;
 }
-
 
 .input-form-field-popup input {
   border: none;
@@ -261,10 +292,6 @@
 .email-input-container::-webkit-scrollbar-track {
   background-color: #f1f1f1;
 }
-
-
-
-
 
 /*************************DROPDOOWN************************/
 .dropdown-menu {
@@ -320,12 +347,12 @@
   padding: 4px 8px;
   border: 1px solid var(--borderColor);
   outline: none;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 .rename-text:focus {
-  border: 1px solid var(--borderColor); 
-  outline: none; 
+  border: 1px solid var(--borderColor);
+  outline: none;
 }
 
 /*******************************************************************TOOL TIP**************************************************/
@@ -337,23 +364,47 @@
   max-width: 80% !important;
   word-wrap: break-word;
   white-space: pre-wrap;
-  background-color: black !important; 
+  background-color: black !important;
   border-radius: 8px !important;
   border: none !important;
 }
 
-
-
 /****************************************************************************************************************/
-@media (max-width:768px) {
+@media (max-width: 768px) {
+  .text-form-field-popup {
+    margin: 16px 0px;
+  }
+  .add-request-form {
+    min-height: 10vh;
+  }
+  .cross-icon {
+    width: 16px;
+    height: 16px;
+  }
   .dropdown-menu {
-    min-width:100px;
+    min-width: 100px;
   }
 
-  .dropdown-item{
+  .dropdown-item {
     padding: 0.3rem 0.5rem;
   }
-  
+
+  .popup-content {
+    width: 70%;
+    max-width: none;
+  }
 }
 
+@media (max-width: 480px) {
+  .popup-content {
+    width: 70%;
+    padding: 15px;
+    max-width: none;
+  }
+}
 
+@media (min-width: 1024px) {
+  .popup-content {
+    width: 70%;
+  }
+}
