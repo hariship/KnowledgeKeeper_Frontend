@@ -35,7 +35,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     getClientDetails();
-  }, [isDocDeletePopupVisible, isCreateFolderPopupVisible]);
+  }, [isDocDeletePopupVisible, isCreateFolderPopupVisible, isFolderDeletePopupVisible, isCreateDocPopupVisible]);
 
   const getClientDetails = async () => {
     try {
@@ -68,7 +68,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
 
   //CREATE
-  const handleCreateFolderClick = (e) => {
+  const handleCreateFolderClick = async(e) => {
     e.stopPropagation();
     setIsCreateFolderPopupVisible(true);
   };
@@ -79,28 +79,21 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
 
   const handleCreateDocument = async (folderId, documentName) => {
-    await apiService.createDocument(folderId, documentName);
+    await apiService.createDocument(documentName, folderId);
     handleCloseDocPopup();
   };
 
   const handleCloseFolderPopup = () => {
     setIsCreateFolderPopupVisible(false);
   };
-  const handleCreateDocClick = () => {
+  const handleCreateDocClick = (folderId) => {
+    setSelectedId(folderId)
     setIsCreateDocPopupVisible(true);
   };
 
   const handleCloseDocPopup = () => {
     setIsCreateDocPopupVisible(false);
   };
-  // const handleCreateTeamSpaceClick = (e) => {
-  //   e.stopPropagation();
-  //   setIsCreateTeamSpacePopupVisible(true);
-  // };
-
-  // const handleCloseTeamSpacePopup = () => {
-  //   setIsCreateTeamSpacePopupVisible(false);
-  // };
 
   const handleDocumentClick = (id) => {
     navigate(`document-edit/${id}`);
@@ -134,8 +127,8 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
 
   const handleDeleteFolder = async () => {
-    await apiService.deleteFolder(selectedId);
-    handleCloseDocDeletePopup();
+     await apiService.deleteFolder(selectedId);
+     handleCloseFolderDeletePopup();
   };
   const handleCloseFolderDeletePopup = () => {
     setIsFolderDeletePopupVisible(false);
@@ -238,9 +231,9 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
                     folderId={e.id}
                     title={e.folderName}
                     docList={e.documents}
-                    onClickCreateDoc={handleCreateDocClick}
+                    onClickCreateDoc={() => handleCreateDocClick(e.id)}
                     onClickDocument={handleDocumentClick}
-                    handleOpenFolderDeletePopup={handleOpenFolderDeletePopup}
+                    handleOpenFolderDeletePopup={()=> handleOpenFolderDeletePopup(e.id)}
                     handleopendocumentdeletepopup={handleOpenDocDeletePopup}
                     activeItem={activeItem}
                   />
@@ -311,7 +304,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
         buttonText="Create Document"
         isVisible={isCreateDocPopupVisible}
         onClose={handleCloseDocPopup}
-        onClick={handleCreateDocument}
+        onClick={(e)=>handleCreateDocument(selectedId,e)}
       />
       {/*Delete Folder*/}
       <DeletePopUp
