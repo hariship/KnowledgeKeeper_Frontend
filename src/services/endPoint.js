@@ -12,6 +12,7 @@ export const ENDPOINTS = {
   GET_USER_TEAMSPACE: `${API_BASE_URL}clients/clientDetails?clientId=${CLIENT_ID}`,
   CREATE_FOLDER: `${API_BASE_URL}clients/${CLIENT_ID}/folders`,
   CREATE_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
+  GET_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
   GET_RECOMMENDATION_SINGLE_DOC:(docId)=> `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
   RENAME_FOLDER: (folderId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}`,
