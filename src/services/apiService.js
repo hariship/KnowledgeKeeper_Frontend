@@ -58,7 +58,6 @@ class ApiService {
         { headers: getHeaders() }
       );
       const { token, status, userId } = response.data;
-
       if (status === "success") {
         sessionStorage.setItem("authToken", token);
         sessionStorage.setItem("clientId", userId);
@@ -66,7 +65,9 @@ class ApiService {
         sessionStorage.setItem("email", user.email);
         return response.data;
       } else {
-        toast.error(response.message || "Unknown error.");
+        // If login is failed, it means it is a new user, and hence do a sign up
+        await this.SignUpWithGoogle(authOToken, email);
+        // toast.error(response.message || "Unknown error.");
         return response.data;
       }
     } catch (error) {
@@ -193,8 +194,35 @@ class ApiService {
     }
   }
 
+  //GET DOCUMENT
+  async getDocument(docId) {
+    try {
+      // Make the API request
+      const response = await axios.get(`${ENDPOINTS.GET_DOCUMENT}/${docId}`, {
+        headers: getHeaders(true),
+      });
+      
+      // Handle success response
+      if (response.status === 200) {
+        console.log("Document fetched successfully", response.data);
+        return response.data;
+      } else {
+        throw new Error("Failed to fetch document");
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching document:",
+        error.response?.data || error.message
+      );
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error;
+    }
+  }
+
   //Create Document
-  async createDocument(folderId, documentName) {
+  async createDocument(documentName,folderId) {
     try {
       const emptyHtmlContent = "<!DOCTYPE html>\n<html>\n<head>\n<title>Empty Document</title>\n</head>\n<body>\n</body>\n</html>";
       const blob = new Blob([emptyHtmlContent], { type: "text/html" });
