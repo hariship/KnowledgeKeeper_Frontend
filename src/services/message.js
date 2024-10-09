@@ -11,6 +11,7 @@ export const MESSAGES = {
       UNAUTHORIZED: "You are not authorized to view this page.",
       SOMETHING_WENT_WRONG: "Something went wrong. Please try again later.",
       NETWORK_ERROR: "Network error. Please check your internet connection.",
+      UNABLE_TO_LOAD: "Error loading document"
     },
     WARNINGS: {
       SESSION_EXPIRED: "Your session has expired. Please log in again.",

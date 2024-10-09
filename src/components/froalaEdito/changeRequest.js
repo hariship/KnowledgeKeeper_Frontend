@@ -4,6 +4,7 @@ import "../../style.css";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import icons from "../../assets/icons";
 import SvgResolveIcon from "../../icons/ResolveIcon";
+
 const ChangeRequest = ({
   width,
   requester,
@@ -20,9 +21,9 @@ const ChangeRequest = ({
   const [shouldShowReadMore, setShouldShowReadMore] = useState(false);
   const changeRequestRef = useRef(null);
   const redContainerRef = useRef(null);
-  const handleToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
+
+  const handleToggle = () => setIsExpanded(!isExpanded);
+
   const updateHeight = () => {
     if (changeRequestRef.current) {
       const changeRect = changeRequestRef.current.getBoundingClientRect();
@@ -41,59 +42,45 @@ const ChangeRequest = ({
   const getVisibleCharacters = (msg, containerWidth) => {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
-    const rootStyles = getComputedStyle(document.documentElement);
-    const fontSize = rootStyles.getPropertyValue("--sixteen-font-size").trim();
-    context.font = fontSize + " Manrope";
+    context.font = "16px Arial";  // This should match your CSS font
 
     let textWidth = context.measureText(msg).width;
+    let visibleChars = msg;
     if (textWidth > containerWidth) {
-      let truncatedMessage = msg;
-      let charIndex = msg.length;
-      while (textWidth > containerWidth && charIndex > 0) {
-        truncatedMessage = msg.slice(0, charIndex - 1) + "...";
-        textWidth = context.measureText(truncatedMessage).width;
-        charIndex--;
+      let ellipsis = '...';
+      let maxWidth = containerWidth - context.measureText(ellipsis).width;
+      let currentWidth = 0;
+
+      for (let i = 0; i < msg.length; i++) {
+        let charWidth = context.measureText(msg[i]).width;
+        if (currentWidth + charWidth > maxWidth) {
+          visibleChars = msg.substring(0, i) + ellipsis;
+          break;
+        }
+        currentWidth += charWidth;
       }
-      return truncatedMessage;
     }
-    return msg;
+    return visibleChars;
   };
 
   useEffect(() => {
-    // Calculate how many characters fit in the given width
     const visibleMessage = getVisibleCharacters(message, width);
     setShortMessage(visibleMessage);
-
-    // Check if we should show "Read more"
     setShouldShowReadMore(visibleMessage !== message);
   }, [message, width]);
-  // const shouldShowReadMore = message.length > 100;
 
   return (
     <div>
-      <div
-        className="change-request-container"
-        ref={changeRequestRef}
-        style={{ width: `${width}px` }}
-      >
+      <div className="change-request-container" ref={changeRequestRef} style={{ width: `${width}px` }}>
         <div className="change-request-header">
           Change Request
-          <img
-            className="close-button"
-            src={icons.activeCloseIcon}
-            alt="close"
-            onClick={onTap}
-          />
+          <img className="close-button" src={icons.activeCloseIcon} alt="close" onClick={onTap} />
         </div>
-        <div
-          className={`change-request-body ${
-            isExpanded ? "expanded" : "collapsed"
-          }`}
-        >
+        <div className={`change-request-body ${isExpanded ? "expanded" : "collapsed"}`}>
           {isExpanded ? message : shortMessage}
           {shouldShowReadMore && (
             <span className="read-more-toggle" onClick={handleToggle}>
-              {isExpanded ? " See less" : "Read more"}
+              {isExpanded ? "See less" : "Read more"}
             </span>
           )}
         </div>
@@ -106,16 +93,14 @@ const ChangeRequest = ({
             <div className="change-request-requester">
               <span>{requester}</span>
               <span>|</span>
-              <span>
-                {date} {time}
-              </span>
+              <span>{date} {time}</span>
             </div>
           </div>
           <div className="change-request-footer">
             <button className="change-request-prev" onClick={onPrevious}>
               <IoIosArrowBack />
             </button>
-            <span> {aiEdits} AI Edits </span>
+            <span>{aiEdits} AI Edits</span>
             <button className="change-request-next" onClick={onNext}>
               <IoIosArrowForward />
             </button>

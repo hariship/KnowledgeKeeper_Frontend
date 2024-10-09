@@ -95,10 +95,11 @@ const AllRequests = () => {
     setAddChangeRequestPopUp(false);
   };
 
-  const handleRequestClick = (aiEdits) => {
+  const handleRequestClick = (byteId,aiEdits) => {
     if (aiEdits === 0) {
       handleZeroEditPopUp();
     }
+    // Get byte with recommendations api to be called with status open
   };
   return (
     <div className="all-request-home">
@@ -146,7 +147,7 @@ const AllRequests = () => {
                 date={item.clientId.createdAt}
                 aiEdits={item.noOfRecommendations}
                 onClick={() => {
-                  handleRequestClick(item.noOfRecommendations);
+                  handleRequestClick(item.id,item.noOfRecommendations);
                 }}
                 onClickDelete={() => {
                   handleDeleteDocPopUp(item.id);

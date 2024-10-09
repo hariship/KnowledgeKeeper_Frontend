@@ -100,4 +100,5 @@ const icons = {kkLogo,
   defaultImage,
 };
 
+
 export default icons;

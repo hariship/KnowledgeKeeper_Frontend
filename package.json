@@ -10,6 +10,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
     "froala-editor": "^4.2.1",
     "google-auth-library": "^9.14.1",
     "html-react-parser": "^5.1.12",

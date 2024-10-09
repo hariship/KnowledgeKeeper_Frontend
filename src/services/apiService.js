@@ -221,6 +221,35 @@ class ApiService {
     }
   }
 
+  async getDocumentWithRecommendations(docId) {
+    try {
+      // Construct the API endpoint with the provided clientId and docId
+      const url = `${ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(docId)}`;
+  
+      // Make the API request
+      const response = await axios.get(url, {
+        headers: getHeaders(true),
+      });
+  
+      // Handle success response
+      if (response.status === 200) {
+        console.log("Recommendations fetched successfully", response.data);
+        return response.data;
+      } else {
+        throw new Error("Failed to fetch recommendations");
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching recommendations:",
+        error.response?.data || error.message
+      );
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error;
+    }
+  }
+
   //Create Document
   async createDocument(documentName,folderId) {
     try {
@@ -378,11 +407,9 @@ class ApiService {
     } catch (error) {
       console.error("Error Response:", error);
       toast.error(
-        error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+        error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD
       );
-      throw (
-        error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
-      );
+      return error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD
     }
   }
 
