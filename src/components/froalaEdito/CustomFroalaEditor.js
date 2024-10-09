@@ -5,51 +5,36 @@ import "froala-editor/css/froala_editor.pkgd.min.css";
 import ChangeRequest from "./ChangeRequest";
 import SuggestionCardComponent from "./SuggestionCardComponent";
 import "./editor-style.css";
-
-const requestData = {
-  request_id: "req-001",
-  request_text:
-    "Do you have a section for Knowledge Keeper which needs to be changed?",
-  sender: "John Doe",
-  date_time: "2024-07-12T14:00:00",
-  documents: [
-    {
-      doc_id: "doc-101",
-      doc_content:
-        '<h2><span style="font-size: 30px; color: rgb(0, 0, 0); font-family: Georgia, serif;">Documentation:</span></h2><p>This is Temp testing part of.<span style="font-size: 14px; color: rgb(0, 0, 0); font-family: Georgia, serif; background-color: white;">This is the example of a edited document. This is the testing area for testing hello-world version of knowledge Keeper.</span><br/><br/><br/><br/><br/><br/><br/><span style="font-size: 14px; color: rgb(0, 0, 0); font-family: Georgia, serif; background-color: white;">This is the second example of a edited document. This is the second testing area for testing hello-world version of knowledge Keeper.</span><span style="font-family: Georgia,serif;"><br></span><br></p>',
-      recommendations: [
-        {
-          id: "rec-002",
-          change_request_type: "Add",
-          change_request_text:
-            "This is the testing area for testing hello-world version of knowledge Keeper.",
-          previous_string: "This is the second example of a edited document.",
-        },
-        {
-          id: "rec-001",
-          change_request_type: "Replace",
-          change_request_text:
-            "Replace with: Nulla condimentum elit ipsum pharetra.",
-          previous_string:
-            "This is the testing area for testing hello-world version of knowledge Keeper.",
-        },
-      ],
-    },
-  ],
-};
+import { apiService } from "../../services/apiService";
 
 const FunctionalEditor = () => {
-  const [model, setModel] = useState(requestData.documents[0].doc_content);
+  const [requestData, setRequestData] = useState(null);  // Start with null to detect loading state
+  const [model, setModel] = useState('');
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
   const [showChangeRequest, setShowChangeRequest] = useState(true);
   const changedModelRef = useRef(model);
-  const totalDocuments = requestData.documents.length;
   const [activeRecommendation, setActiveRecommendation] = useState("");
   const [editorWidth, setEditorWidth] = useState(0);
   const editorRef = useRef(null);
 
-  // Function to dynamically add data-location based on previous_string
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiService.getRecommendationSingleDoc(24); // Assuming 5 is clientId, 4 is byteId
+        setRequestData(response.data);  // Adjust based on actual API response structure
+        setModel(response.data.documents[0].doc_content); // Load the initial document content
+      } catch (error) {
+        console.error("Error fetching recommendations:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Dynamically add data-location based on previous_string
+  useEffect(() => {
+    if (!requestData) return;  // Wait for requestData to be loaded
+
     const addDataLocations = () => {
       let doc = document.createElement("div");
       doc.innerHTML = model;
@@ -69,9 +54,7 @@ const FunctionalEditor = () => {
     };
 
     addDataLocations();
-    // Ensure the effect only runs when recommendations change, not continuously
-    // Remove `model` dependency to prevent infinite re-rendering
-  }, [requestData.documents[0].recommendations]);
+  }, [requestData, model]);
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
@@ -92,15 +75,18 @@ const FunctionalEditor = () => {
   }, [editorRef]);
 
   useEffect(() => {
-    changedModelRef.current = model;
-    placeCircles(model, requestData.documents[currentDocIndex].recommendations);
-  }, [model, currentDocIndex]);
+    if (requestData) {
+      changedModelRef.current = model;
+      placeCircles(model, requestData.documents[currentDocIndex].recommendations);
+    }
+  }, [model, currentDocIndex, requestData]);
 
   const handleModelChange = useCallback((newModel) => {
     setModel(newModel);
   }, []);
 
   const replaceText = (index) => {
+    if (!requestData) return;
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
     const { recommendations } = requestData.documents[currentDocIndex];
@@ -118,6 +104,7 @@ const FunctionalEditor = () => {
   };
 
   const highlightText = (index, color) => {
+    if (!requestData) return;
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
     const { recommendations } = requestData.documents[currentDocIndex];
@@ -205,7 +192,7 @@ const FunctionalEditor = () => {
   };
 
   const handleNext = () => {
-    if (currentDocIndex < totalDocuments - 1) {
+    if (currentDocIndex < requestData.documents.length - 1) {
       removeFloatingCircles();
       setCurrentDocIndex(currentDocIndex + 1);
       setModel(requestData.documents[currentDocIndex + 1].doc_content);
@@ -216,96 +203,100 @@ const FunctionalEditor = () => {
     setShowChangeRequest(false);
   };
 
-    // Extract date and time
-    const { date_time, request_text, sender } = requestData;
-    const date = new Date(date_time).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-    const time = new Date(date_time).toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  
-    return (
-      <div id="editor" className="froala-editor-section">
-        {/* Toolbar Container */}
-        <div id="toolbar-container" className="toolbar-container"></div>
-        <div className="editor-suggestion">
-          <div className="change-request">
-            {showChangeRequest && (
-              <ChangeRequest
-                width={editorWidth}
-                requester={sender}
-                date={date}
-                time={time}
-                message={request_text}
-                aiEdits={`${currentDocIndex + 1}/${totalDocuments}`}
-                onPrevious={handlePrevious}
-                onNext={handleNext}
-                onTap={handleOnTap}
-              />
-            )}
-            {/* Froala Editor */}
-            <div ref={editorRef}>
-              <FroalaEditorComponent
-                tag="textarea"
-                model={model}
-                onModelChange={handleModelChange}
-                config={{
-                  toolbarSticky: true,
-                  editorClass: "froala-editor",
-                  spellcheck: true,
-                  attribution: false,
-                  heightMin: 200,
-                  heightMax: 800,
-                  placeholderText: "Edit your content here...",
-                  toolbarVisibleWithoutSelection: true,
-                  charCounterCount: true,
-                  toolbarContainer: "#toolbar-container",
-                  events: {
-                    initialized: function () {
-                      const secondToolbar =
-                        document.querySelector(".fr-second-toolbar");
-                      if (secondToolbar) {
-                        secondToolbar.remove();
-                      }
-                    },
-                    contentChanged: async function () {
-                      const updatedModel = this.html.get();
-                      placeCircles(
-                        updatedModel,
-                        requestData.documents[currentDocIndex].recommendations
-                      );
-                      changedModelRef.current = updatedModel;
-                    },
+  if (!requestData) {
+    return <div>Loading...</div>; // Render a loader until the data is fetched
+  }
+
+  // Extract date and time
+  const { date_time, request_text, sender } = requestData;
+  const date = new Date(date_time).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = new Date(date_time).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return (
+    <div id="editor" className="froala-editor-section">
+      {/* Toolbar Container */}
+      <div id="toolbar-container" className="toolbar-container"></div>
+      <div className="editor-suggestion">
+        <div className="change-request">
+          {showChangeRequest && (
+            <ChangeRequest
+              width={editorWidth}
+              requester={sender}
+              date={date}
+              time={time}
+              message={request_text}
+              aiEdits={`${currentDocIndex + 1}/${requestData.documents.length}`}
+              onPrevious={handlePrevious}
+              onNext={handleNext}
+              onTap={handleOnTap}
+            />
+          )}
+          {/* Froala Editor */}
+          <div ref={editorRef}>
+            <FroalaEditorComponent
+              tag="textarea"
+              model={model}
+              onModelChange={handleModelChange}
+              config={{
+                toolbarSticky: true,
+                editorClass: "froala-editor",
+                spellcheck: true,
+                attribution: false,
+                heightMin: 200,
+                heightMax: 800,
+                placeholderText: "Edit your content here...",
+                toolbarVisibleWithoutSelection: true,
+                charCounterCount: true,
+                toolbarContainer: "#toolbar-container",
+                events: {
+                  initialized: function () {
+                    const secondToolbar =
+                      document.querySelector(".fr-second-toolbar");
+                    if (secondToolbar) {
+                      secondToolbar.remove();
+                    }
                   },
-                }}
-              />
-            </div>
-          </div>
-          <div>
-            {requestData.documents[currentDocIndex].recommendations.map(
-              (recommendation, index) => (
-                <SuggestionCardComponent
-                  key={recommendation.id}
-                  num={index + 1}
-                  title={recommendation.change_request_type}
-                  content={recommendation.change_request_text}
-                  isActive={activeRecommendation === index}
-                  onTapAccept={() => replaceText(index)}
-                  onTapReject={() =>
-                    console.log(`Rejected recommendation ${activeRecommendation === index}`)
-                  }
-                  onCoverTap={() => setActiveRecommendation(index)}
-                />
-              )
-            )}
+                  contentChanged: async function () {
+                    const updatedModel = this.html.get();
+                    placeCircles(
+                      updatedModel,
+                      requestData.documents[currentDocIndex].recommendations
+                    );
+                    changedModelRef.current = updatedModel;
+                  },
+                },
+              }}
+            />
           </div>
         </div>
+        <div>
+          {requestData.documents[currentDocIndex].recommendations.map(
+            (recommendation, index) => (
+              <SuggestionCardComponent
+                key={recommendation.id}
+                num={index + 1}
+                title={recommendation.change_request_type}
+                content={recommendation.change_request_text}
+                isActive={activeRecommendation === index}
+                onTapAccept={() => replaceText(index)}
+                onTapReject={() =>
+                  console.log(`Rejected recommendation ${activeRecommendation === index}`)
+                }
+                onCoverTap={() => setActiveRecommendation(index)}
+              />
+            )
+          )}
+        </div>
       </div>
-    );
-  }
-  
-  export default FunctionalEditor;
+    </div>
+  );
+};
+
+export default FunctionalEditor;

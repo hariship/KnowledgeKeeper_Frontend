@@ -221,10 +221,10 @@ class ApiService {
     }
   }
 
-  async getDocumentWithRecommendations(docId) {
+  async getDocumentWithRecommendations(byteId) {
     try {
       // Construct the API endpoint with the provided clientId and docId
-      const url = `${ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(docId)}`;
+      const url = `${ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(byteId)}`;
   
       // Make the API request
       const response = await axios.get(url, {
@@ -394,10 +394,10 @@ class ApiService {
   }
 
   //GET RECOMMENDATION FOR SINGLE DOCUMENT
-  async getRecommendationSingleDoc(docId) {
+  async getRecommendationSingleDoc(byteId) {
     try {
       const response = await axios.get(
-        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(docId),
+        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(byteId),
         {
           headers: getHeaders(true),
         }
@@ -435,7 +435,7 @@ class ApiService {
     try {
       const requestBody = { folderName };
       const response = await axios.put(
-        ENDPOINTS.RENAME_FOLDER(folderId),
+        ENDPOINTS.RENAME_OR_DELETE_FOLDER(folderId),
         requestBody,
         {
           headers: getHeaders(true),
@@ -453,7 +453,7 @@ class ApiService {
   //Delete FOLDER
   async deleteFolder(folderId) {
     try {
-      const response = await axios.delete(ENDPOINTS.RENAME_FOLDER(folderId), {
+      const response = await axios.delete(ENDPOINTS.RENAME_OR_DELETE_FOLDER(folderId), {
         headers: getHeaders(true),
       });
       return response.data;
@@ -468,7 +468,7 @@ class ApiService {
   //Delete Document
   async deleteDocument(docId) {
     try {
-      const response = await axios.delete(ENDPOINTS.RENAME_DOCUMENT(docId), {
+      const response = await axios.delete(ENDPOINTS.RENAME_OR_DELETE_DOCUMENT(docId), {
         headers: getHeaders(true),
       });
       return response.data;
@@ -484,7 +484,7 @@ class ApiService {
     try {
       const requestBody = { documentName };
       const response = await axios.put(
-        ENDPOINTS.RENAME_DOCUMENT(docId),
+        ENDPOINTS.RENAME_OR_DELETE_DOCUMENT(docId),
         requestBody,
         {
           headers: getHeaders(true),
