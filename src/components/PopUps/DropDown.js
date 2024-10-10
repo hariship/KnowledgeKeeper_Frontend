@@ -2,20 +2,27 @@ import React, { useRef, useEffect, useState } from "react";
 import { usePopper } from "react-popper";
 import "./popup-style.css";
 
-const DropdownMenu = ({ referenceElement, options, onClose, exceptionRef, placement = 'right-start' }) => {
+const DropdownMenu = ({
+  referenceElement,
+  options,
+  onClose,
+  exceptionRef,
+  placement = "right-start",
+}) => {
   const dropdownRef = useRef(null);
   const [popperElement, setPopperElement] = useState(null);
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
-    placement: placement,  
+    placement: placement,
     modifiers: [
       {
-        name: 'offset',
+        name: "offset",
         options: {
-          offset: [0, 3], 
+          offset: [0, 3],
         },
       },
     ],
   });
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -40,17 +47,22 @@ const DropdownMenu = ({ referenceElement, options, onClose, exceptionRef, placem
         setPopperElement(node);
         dropdownRef.current = node;
       }}
-      style={{ ...styles.popper, position: 'fixed' }}  
+      style={{ ...styles.popper, position: "fixed" }}
       className="dropdown-menu"
       {...attributes.popper}
     >
       {options.map((option, index) => (
-        <div className="dropdown-item" key={index} onClick={(e) => {
-          e.stopPropagation(); 
-          option.onClick(e); 
-        }}>
-          
-          <img src={option.icon} alt={option.label} className="dropdown-icon" />
+        <div
+          className="dropdown-item"
+          key={index}
+          onClick={(e) => {
+            e.stopPropagation();
+            option.onClick(e);
+          }}
+        >
+          <div className="dropdown-icon">
+            <option.icon />
+          </div>
           <span>{option.label}</span>
         </div>
       ))}

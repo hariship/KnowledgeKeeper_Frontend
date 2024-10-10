@@ -8,7 +8,7 @@ const SvgCloseSidebar = (props) => (
     {...props}
   >
     <path
-      stroke="#727272"
+      stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={1.5}

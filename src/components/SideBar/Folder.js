@@ -7,6 +7,14 @@ import RenamePopUp from "../PopUps/RenamePopUp";
 // import InviteMemebersPopUp from "../PopUps/InviteMembersPopUp";
 import CustomTooltip from "../PopUps/CustomToolTip";
 import { apiService } from "../../services/apiService";
+import SvgAddIcon from "../../icons/AddIcon";
+import SvgRename from "../../icons/Rename";
+import SvgTrash from "../../icons/Trash";
+import SvgActiveDoc from "../../icons/ActiveDoc";
+import SvgDocumentIcon from "../../icons/DocumentIcon";
+import SvgActiveFolder from "../../icons/ActiveFolder";
+import SvgActiveRightArrow from "../../icons/ActiveRightArrow";
+import SvgFolderIcon from "../../icons/FolderIcon";
 
 // const TeamSpace = ({
 //   title,
@@ -237,11 +245,11 @@ const Folder = ({
   const handleCloseMenu = () => {
     setShowDropdown(false);
   };
-  const currentIcon = isHovered
+  const CurrentIcon = isHovered
     ? isOpen
-      ? icons.activeFolder
-      : icons.activeRightArrow
-    : icons.folderIcon;
+      ? SvgActiveFolder
+      : SvgActiveRightArrow
+    : SvgFolderIcon;
 
   const handleAddDocClick = (e) => {
     e.stopPropagation();
@@ -268,12 +276,12 @@ const Folder = ({
   const dropdownOptions = [
     {
       label: "Rename",
-      icon: icons.renameIcon,
+      icon: SvgRename,
       onClick: handleOpenRenamePopUp,
     },
     {
       label: "Delete",
-      icon: icons.trashIcon,
+      icon: SvgTrash,
       onClick: handleOpenDeletePopup,
     },
   ];
@@ -289,7 +297,8 @@ const Folder = ({
         onMouseLeave={handleMouseLeave}
       >
         <div className="folder-header">
-          <img alt="folder" src={currentIcon} />
+          <CurrentIcon className="default-img-icon"/>
+          {/* <img alt="folder" src={currentIcon} /> */}
           <span
             ref={titleRef}
             className={`folder-title ${isHovered ? "active" : ""}`}
@@ -305,12 +314,11 @@ const Folder = ({
           className="hide-icon"
         />
         <CustomTooltip id={tooltipId} />
-        <img
-          alt="add"
-          src={icons.activeAddIcon}
-          className="hide-icon"
-          onClick={handleAddDocClick}
-        />
+        <SvgAddIcon
+              className="hide-icon"
+              onClick={handleAddDocClick}
+            />
+       
       </div>
       {isOpen && docList && docList.length > 0 && (
         <div>
@@ -410,17 +418,17 @@ const Document = ({
   const dropdownOptions = [
     {
       label: "Rename",
-      icon: icons.renameIcon,
+      icon: SvgRename,
       onClick: handleOpenRenamePopUp,
     },
     {
       label: "Delete",
-      icon: icons.trashIcon,
+      icon: SvgTrash,
       onClick: handleOpenDeletePopup,
     },
   ];
-  const currentIcon =
-    isHovered || isActive ? icons.activeDoc : icons.documentIcon;
+  const CurrentIcon =
+    isHovered || isActive ? SvgActiveDoc : SvgDocumentIcon;
   const tooltipId = "document-tooltip";
 
   const handleUpdateRename = async () => {
@@ -460,7 +468,7 @@ const Document = ({
 
       <CustomTooltip id={tooltipId} place="right" />
       <div className="document-content">
-        <img src={currentIcon} alt="doc" />
+        <CurrentIcon />
         <span
           ref={titleRef}
           className={`folder-title ${isHovered || isActive ? "active" : ""}`}

@@ -8,7 +8,7 @@ const SvgIntergration = (props) => (
     {...props}
   >
     <g
-      stroke="#727272"
+      stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       clipPath="url(#intergration_svg__a)"
