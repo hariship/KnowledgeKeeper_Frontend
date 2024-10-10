@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import "../../style.css";
+import "./editor-style.css";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import icons from "../../assets/icons";
 import SvgResolveIcon from "../../icons/ResolveIcon";
@@ -42,7 +42,7 @@ const ChangeRequest = ({
   const getVisibleCharacters = (msg, containerWidth) => {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
-    context.font = "16px Arial";  // This should match your CSS font
+    context.font = "16px Arial"; 
 
     let textWidth = context.measureText(msg).width;
     let visibleChars = msg;

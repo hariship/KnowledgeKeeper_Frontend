@@ -2,14 +2,14 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import FroalaEditorComponent from "react-froala-wysiwyg";
 import "froala-editor/js/froala_editor.pkgd.min.js";
 import "froala-editor/css/froala_editor.pkgd.min.css";
-import ChangeRequest from "./ChangeRequest";
+import ChangeRequest from "./changeRequest.js";
 import SuggestionCardComponent from "./SuggestionCardComponent";
 import "./editor-style.css";
 import { apiService } from "../../services/apiService";
 
 const FunctionalEditor = () => {
-  const [requestData, setRequestData] = useState(null);  // Start with null to detect loading state
-  const [model, setModel] = useState('');
+  const [requestData, setRequestData] = useState(null); // Start with null to detect loading state
+  const [model, setModel] = useState("");
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
   const [showChangeRequest, setShowChangeRequest] = useState(true);
   const changedModelRef = useRef(model);
@@ -21,8 +21,13 @@ const FunctionalEditor = () => {
     const fetchData = async () => {
       try {
         const response = await apiService.getRecommendationSingleDoc(24); // Assuming 5 is clientId, 4 is byteId
-        setRequestData(response.data);  // Adjust based on actual API response structure
-        setModel(response.data.documents[0].doc_content); // Load the initial document content
+        console.log("api call", response);
+        setRequestData(response.data); // Adjust based on actual API response structure
+        setModel(response.data.documents[0].doc_content); // Load the initial document content : TODO:CHANGE IT
+        const htmlResponse = await fetch('https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html');
+        const htmlContent = await htmlResponse.text(); // Get the HTML as text
+        setModel(htmlContent);
+        console.log(response);
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       }
@@ -33,8 +38,7 @@ const FunctionalEditor = () => {
 
   // Dynamically add data-location based on previous_string
   useEffect(() => {
-    if (!requestData) return;  // Wait for requestData to be loaded
-
+    if (!requestData) return; // Wait for requestData to be loaded
     const addDataLocations = () => {
       let doc = document.createElement("div");
       doc.innerHTML = model;
@@ -49,7 +53,8 @@ const FunctionalEditor = () => {
 
       // Only setModel if content has actually changed
       if (modifiedContent !== model) {
-        setModel(modifiedContent);
+        console.log("modifiedContent called");
+        // setModel(modifiedContent);
       }
     };
 
@@ -77,12 +82,15 @@ const FunctionalEditor = () => {
   useEffect(() => {
     if (requestData) {
       changedModelRef.current = model;
-      placeCircles(model, requestData.documents[currentDocIndex].recommendations);
+      placeCircles(
+        model,
+        requestData.documents[currentDocIndex].recommendations
+      );
     }
   }, [model, currentDocIndex, requestData]);
 
   const handleModelChange = useCallback((newModel) => {
-    setModel(newModel);
+    // setModel(newModel);
   }, []);
 
   const replaceText = (index) => {
@@ -100,7 +108,7 @@ const FunctionalEditor = () => {
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
-    setModel(updatedModel);
+    // setModel(updatedModel);
   };
 
   const highlightText = (index, color) => {
@@ -118,7 +126,7 @@ const FunctionalEditor = () => {
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
-    setModel(updatedModel);
+    // setModel(updatedModel);
   };
 
   const addFloatingCircle = (x, y, index) => {
@@ -152,6 +160,7 @@ const FunctionalEditor = () => {
   };
 
   const placeCircles = (docContent, recommendations) => {
+    console.log("place circles");
     removeFloatingCircles();
     const tempDiv = document.createElement("div");
     tempDiv.style.position = "absolute";
@@ -225,7 +234,7 @@ const FunctionalEditor = () => {
       <div id="toolbar-container" className="toolbar-container"></div>
       <div className="editor-suggestion">
         <div className="change-request">
-          {showChangeRequest && (
+          {/* {showChangeRequest && (
             <ChangeRequest
               width={editorWidth}
               requester={sender}
@@ -237,7 +246,7 @@ const FunctionalEditor = () => {
               onNext={handleNext}
               onTap={handleOnTap}
             />
-          )}
+          )} */}
           {/* Froala Editor */}
           <div ref={editorRef}>
             <FroalaEditorComponent
@@ -264,12 +273,12 @@ const FunctionalEditor = () => {
                     }
                   },
                   contentChanged: async function () {
-                    const updatedModel = this.html.get();
-                    placeCircles(
-                      updatedModel,
-                      requestData.documents[currentDocIndex].recommendations
-                    );
-                    changedModelRef.current = updatedModel;
+                    // const updatedModel = this.html.get();
+                    // placeCircles(
+                    //   updatedModel,
+                    //   requestData.documents[currentDocIndex].recommendations
+                    // );
+                    // changedModelRef.current = updatedModel;
                   },
                 },
               }}
@@ -287,7 +296,9 @@ const FunctionalEditor = () => {
                 isActive={activeRecommendation === index}
                 onTapAccept={() => replaceText(index)}
                 onTapReject={() =>
-                  console.log(`Rejected recommendation ${activeRecommendation === index}`)
+                  console.log(
+                    `Rejected recommendation ${activeRecommendation === index}`
+                  )
                 }
                 onCoverTap={() => setActiveRecommendation(index)}
               />
