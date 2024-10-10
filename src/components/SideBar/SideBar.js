@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./sidebar-style.css";
 import SidebarItem from "./SideBarItems";
-import icons from "../../assets/icons";
 import "../../style.css";
 import { useNavigate } from "react-router-dom";
 import CreateFolderPopUp from "../PopUps/CreateFolderPopUp";
@@ -12,6 +11,15 @@ import SvgOpenSidebar from "../../icons/OpenSidebar";
 import { apiService } from "../../services/apiService";
 import Folder from "./Folder";
 import SvgKkLogo from "../../icons/KkLogo";
+import SvgAddIcon from "../../icons/AddIcon";
+import SvgIntergration from "../../icons/Intergration";
+import SvgTrash from "../../icons/Trash";
+import SvgContactUs from "../../icons/ContactUs";
+import SvgAllRequest from "../../icons/AllRequest";
+import SvgProfile from "../../icons/Profile";
+import SvgDropdown from "../../icons/Dropdown";
+import SvgCloseSidebar from "../../icons/CloseSidebar";
+import SvgLogOut from "../../icons/LogOut";
 
 const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [isCreateFolderPopupVisible, setIsCreateFolderPopupVisible] =
@@ -32,20 +40,14 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [selectedId, setSelectedId] = useState(null);
 
   const [projectList, setProjectList] = useState([]);
-  const [loading, setLoading] = useState(true);
   useEffect(() => {
     getClientDetails();
   }, [isDocDeletePopupVisible, isCreateFolderPopupVisible]);
 
   const getClientDetails = async () => {
-    try {
-      const data = await apiService.getUserTeamSpace();
-      setProjectList(data);
-      console.log("navigation data", data);
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
+    const data = await apiService.getUserTeamSpace();
+    setProjectList(data);
+    console.log("navigation data", data);
   };
 
   const toggleSidebar = () => {
@@ -124,7 +126,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const dropdownOptions = [
     {
       label: "Logout",
-      icon: icons.logOutIcon,
+      icon: SvgLogOut,
       onClick: handleOpenLogoutPopUp,
     },
   ];
@@ -171,10 +173,10 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
               data-tooltip-content={sessionStorage.getItem("email")}
               ref={profileSectionRef}
               onClick={toggleDropdown}
-            >
-              <img alt="profile" src={icons.profileIcon} />
+            > 
+            <SvgProfile className="default-img-icon"/>
               <h2>{sessionStorage.getItem("email")}</h2>
-              <img alt="dropdown" src={icons.dropDownICon} />
+              <SvgDropdown className="default-img-icon"/>
             </div>
             {isDropdownVisible && (
               <DropdownMenu
@@ -186,18 +188,12 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
               />
             )}
             <CustomTooltip id={tooltipId} />
-            <img
-              alt="close"
-              src={icons.closeSideBarIcon}
-              className="toggle-sidebar"
-              onClick={toggleSidebar}
-            />
+            <SvgCloseSidebar className="default-img-icon" onClick={toggleSidebar} />
           </div>
           <div style={{ height: "8px" }}></div>
           <SidebarItem
             title="All Requests"
-            icon={icons.allRequestIcon}
-            activeIcon={icons.activeAllRequestIcon}
+            icon={SvgAllRequest}
             isActive={activeItem === "All Requests"}
             onClick={() => {
               navigate("all-requests");
@@ -213,10 +209,8 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
             >
               Teamspace
             </div>
-            <img
-              alt="add"
+            <SvgAddIcon
               className="hide-icon"
-              src={icons.activeAddIcon}
               onClick={handleCreateFolderClick}
             />
           </div>
@@ -250,8 +244,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
           </div>
           <SidebarItem
             title="Integration"
-            icon={icons.intergrationIcon}
-            activeIcon={icons.activeIntegration}
+            icon={SvgIntergration}
             isActive={activeItem === "Integration"}
             onClick={() => {
               navigate("integration");
@@ -259,8 +252,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
           />
           <SidebarItem
             title="Trash"
-            icon={icons.trashIcon}
-            activeIcon={icons.activeTrash}
+            icon={SvgTrash}
             isActive={activeItem === "Trash"}
             onClick={() => {
               navigate("trash");
@@ -268,8 +260,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
           />
           <SidebarItem
             title="Feedback"
-            icon={icons.contactUsIcon}
-            activeIcon={icons.activeContactUs}
+            icon={SvgContactUs}
             isActive={activeItem === "Feedback"}
             onClick={() => {
               navigate("feedback");

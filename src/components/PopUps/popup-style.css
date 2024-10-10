@@ -359,13 +359,13 @@
 
 .custom-tooltip {
   align-items: start !important;
-  padding: 4px 6px !important;
-  font-size: var(--twelve-font-size) !important;
+  padding: 2px 4px !important;
+  font-size: var(--ten-font-size) !important;
   max-width: 80% !important;
   word-wrap: break-word;
   white-space: pre-wrap;
-  background-color: black !important;
-  border-radius: 8px !important;
+  background-color: var(--darkTeal) !important;
+  border-radius: 3px !important;
   border: none !important;
 }
 

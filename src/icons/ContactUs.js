@@ -8,7 +8,7 @@ const SvgContactUs = (props) => (
     {...props}
   >
     <g
-      stroke="#727272"
+      stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       clipPath="url(#contact-us_svg__a)"

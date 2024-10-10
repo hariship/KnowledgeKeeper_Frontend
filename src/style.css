@@ -31,6 +31,7 @@
 
 /*Size*/
 :root {
+  --eight-font-size: clamp(4px, 1.0vw, 8px);
   --ten-font-size: clamp(7px, 1.0vw, 10px);
   --twelve-font-size: clamp(8px, 1.3vw, 12px);
   --fourteen-font-size: clamp(10px, 1.5vw, 14px);
