@@ -20,19 +20,18 @@ const FunctionalEditor = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiService.getRecommendationSingleDoc(24); // Assuming 5 is clientId, 4 is byteId
-        console.log("api call", response);
-        setRequestData(response.data); // Adjust based on actual API response structure
-        setModel(response.data.documents[0].doc_content); // Load the initial document content : TODO:CHANGE IT
-        const htmlResponse = await fetch('https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html');
-        const htmlContent = await htmlResponse.text(); // Get the HTML as text
-        setModel(htmlContent);
-        console.log(response);
+        const response = await apiService.getRecommendationSingleDoc(24);
+        setRequestData(response.data);  
+        const url = response.data.documents[0].doc_content;
+        const htmlResponse = await fetch(url, { mode: 'cors' }); // Using 'cors' mode instead of 'no-cors' for proper fetching
+        const htmlBlob = await htmlResponse.blob();
+        const htmlContent = await htmlBlob.text(); // Converts blob to text
+        setModel(htmlContent); // Set model with HTML content
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       }
     };
-
+  
     fetchData();
   }, []);
 
