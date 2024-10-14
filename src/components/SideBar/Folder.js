@@ -223,7 +223,10 @@ const Folder = ({
   const titleRef = useRef(null);
   const tooltipId = "folder-tooltip";
   useEffect(() => {
-    const isActiveInFolder = docList.some((doc) => doc.doc_id === activeItem);
+    const isActiveInFolder = docList.some(
+      (doc) => String(doc.id) === String(activeItem)
+    );
+    console.log("Here is Active Item inside folder",activeItem);
     if (isActiveInFolder) setIsOpen(true);
   }, [activeItem, docList]);
   const toggleOpen = () => {
@@ -297,7 +300,7 @@ const Folder = ({
         onMouseLeave={handleMouseLeave}
       >
         <div className="folder-header">
-          <CurrentIcon className="default-img-icon"/>
+          <CurrentIcon className="default-img-icon" />
           {/* <img alt="folder" src={currentIcon} /> */}
           <span
             ref={titleRef}
@@ -314,11 +317,7 @@ const Folder = ({
           className="hide-icon"
         />
         <CustomTooltip id={tooltipId} />
-        <SvgAddIcon
-              className="hide-icon"
-              onClick={handleAddDocClick}
-            />
-       
+        <SvgAddIcon className="hide-icon" onClick={handleAddDocClick} />
       </div>
       {isOpen && docList && docList.length > 0 && (
         <div>
@@ -375,22 +374,22 @@ const Document = ({
   const menuRef = useRef(null);
   const titleRef = useRef(null);
 
+  useEffect(() => {
+    if (String(activeItem) === String(docId)) {
+      setIsActive(true);
+    } else {
+      setIsActive(false);
+    }
+  }, [activeItem, docId]);
 
   const handleMouseEnter = () => {
-    console.log(docId, activeItem, "is doc not active");
-    if (activeItem === docId) {
-      setIsActive(true);
-    }
     setIsHovered(true);
   };
 
   const handleMouseLeave = () => {
-    if (activeItem === docId) {
-      console.log(isActive, "is active");
-      setIsActive(true);
-    }
     setIsHovered(false);
   };
+
 
   const handleMenuClick = (e) => {
     e.stopPropagation();
@@ -427,8 +426,7 @@ const Document = ({
       onClick: handleOpenDeletePopup,
     },
   ];
-  const CurrentIcon =
-    isHovered || isActive ? SvgActiveDoc : SvgDocumentIcon;
+  const CurrentIcon = isHovered || isActive ? SvgActiveDoc : SvgDocumentIcon;
   const tooltipId = "document-tooltip";
 
   const handleUpdateRename = async () => {
@@ -468,7 +466,7 @@ const Document = ({
 
       <CustomTooltip id={tooltipId} place="right" />
       <div className="document-content">
-        <CurrentIcon />
+        <CurrentIcon className="default-img-icon" />
         <span
           ref={titleRef}
           className={`folder-title ${isHovered || isActive ? "active" : ""}`}

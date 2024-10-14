@@ -6,12 +6,15 @@ import ChangeRequest from "./changeRequest.js";
 import SuggestionCardComponent from "./SuggestionCardComponent";
 import "./editor-style.css";
 import { apiService } from "../../services/apiService";
+import RecommendationSkeletonLoader from "../loading-screen/RecommendationSkeleton.js";
+import EditorSkeleton from "../loading-screen/EditorSkeleton.js";
 
 const FunctionalEditor = () => {
   const [requestData, setRequestData] = useState(null); // Start with null to detect loading state
   const [model, setModel] = useState("");
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
-  const [showChangeRequest, setShowChangeRequest] = useState(true);
+  const [showChangeRequest, setShowChangeRequest] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const changedModelRef = useRef(model);
   const [activeRecommendation, setActiveRecommendation] = useState("");
   const [editorWidth, setEditorWidth] = useState(0);
@@ -23,10 +26,14 @@ const FunctionalEditor = () => {
         const response = await apiService.getRecommendationSingleDoc(24); // Assuming 5 is clientId, 4 is byteId
         console.log("api call", response);
         setRequestData(response.data); // Adjust based on actual API response structure
-        setModel(response.data.documents[0].doc_content); // Load the initial document content : TODO:CHANGE IT
-        const htmlResponse = await fetch('https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html');
-        const htmlContent = await htmlResponse.text(); // Get the HTML as text
+        // setModel(response.data.documents[0].doc_content); // Load the initial document content : TODO:CHANGE IT
+        const htmlResponse = await fetch(
+          "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html"
+        );
+        const htmlContent = await htmlResponse.text();
         setModel(htmlContent);
+        setIsLoading(false);
+        // setModel("This is the example This is the exampleThis is the exampleThis is the exampleThis is the example");
         console.log(response);
       } catch (error) {
         console.error("Error fetching recommendations:", error);
@@ -54,7 +61,7 @@ const FunctionalEditor = () => {
       // Only setModel if content has actually changed
       if (modifiedContent !== model) {
         console.log("modifiedContent called");
-        // setModel(modifiedContent);
+        // setModel(modifiedContent); need to change this setmodel
       }
     };
 
@@ -64,6 +71,7 @@ const FunctionalEditor = () => {
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
+        console.log("width of change request", entry.contentRect.width);
         setEditorWidth(entry.contentRect.width);
       }
     });
@@ -77,7 +85,7 @@ const FunctionalEditor = () => {
         resizeObserver.unobserve(editorRef.current);
       }
     };
-  }, [editorRef]);
+  }, [editorRef, model]);
 
   useEffect(() => {
     if (requestData) {
@@ -90,7 +98,7 @@ const FunctionalEditor = () => {
   }, [model, currentDocIndex, requestData]);
 
   const handleModelChange = useCallback((newModel) => {
-    // setModel(newModel);
+    setModel(newModel);
   }, []);
 
   const replaceText = (index) => {
@@ -108,7 +116,7 @@ const FunctionalEditor = () => {
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
-    // setModel(updatedModel);
+    setModel(updatedModel);
   };
 
   const highlightText = (index, color) => {
@@ -196,7 +204,7 @@ const FunctionalEditor = () => {
     if (currentDocIndex > 0) {
       removeFloatingCircles();
       setCurrentDocIndex(currentDocIndex - 1);
-      setModel(requestData.documents[currentDocIndex - 1].doc_content);
+      // setModel(requestData.documents[currentDocIndex - 1].doc_content);
     }
   };
 
@@ -204,7 +212,7 @@ const FunctionalEditor = () => {
     if (currentDocIndex < requestData.documents.length - 1) {
       removeFloatingCircles();
       setCurrentDocIndex(currentDocIndex + 1);
-      setModel(requestData.documents[currentDocIndex + 1].doc_content);
+      // setModel(requestData.documents[currentDocIndex + 1].doc_content);
     }
   };
 
@@ -213,7 +221,18 @@ const FunctionalEditor = () => {
   };
 
   if (!requestData) {
-    return <div>Loading...</div>; // Render a loader until the data is fetched
+    return (
+      <div id="editor" className="froala-editor-section">
+        <div id="toolbar-container" className="toolbar-container"></div>
+          <div style={{paddingBottom:"15px"}}>  <EditorSkeleton  height="40px" borderRadius="100px" padding="4px 0px" /></div>
+        <div className="editor-suggestion">
+          <div className="change-request">
+          <EditorSkeleton width="100%" height="100vh" borderRadius="4px" />
+          </div>
+          <RecommendationSkeletonLoader count={4} />
+        </div>
+      </div>
+    );
   }
 
   // Extract date and time
@@ -234,7 +253,7 @@ const FunctionalEditor = () => {
       <div id="toolbar-container" className="toolbar-container"></div>
       <div className="editor-suggestion">
         <div className="change-request">
-          {/* {showChangeRequest && (
+          {showChangeRequest && (
             <ChangeRequest
               width={editorWidth}
               requester={sender}
@@ -246,65 +265,77 @@ const FunctionalEditor = () => {
               onNext={handleNext}
               onTap={handleOnTap}
             />
-          )} */}
-          {/* Froala Editor */}
-          <div ref={editorRef}>
-            <FroalaEditorComponent
-              tag="textarea"
-              model={model}
-              onModelChange={handleModelChange}
-              config={{
-                toolbarSticky: true,
-                editorClass: "froala-editor",
-                spellcheck: true,
-                attribution: false,
-                heightMin: 200,
-                heightMax: 800,
-                placeholderText: "Edit your content here...",
-                toolbarVisibleWithoutSelection: true,
-                charCounterCount: true,
-                toolbarContainer: "#toolbar-container",
-                events: {
-                  initialized: function () {
-                    const secondToolbar =
-                      document.querySelector(".fr-second-toolbar");
-                    if (secondToolbar) {
-                      secondToolbar.remove();
-                    }
+          )}
+
+          {isLoading ? (
+            <EditorSkeleton />
+          ) : (
+            // Froala Editor
+            <div ref={editorRef}>
+              <FroalaEditorComponent
+                tag="textarea"
+                model={model}
+                onModelChange={handleModelChange}
+                config={{
+                  toolbarSticky: true,
+                  editorClass: "froala-editor",
+                  spellcheck: true,
+                  attribution: false,
+                  heightMin: 200,
+                  heightMax: 800,
+                  placeholderText: "Edit your content here...",
+                  toolbarVisibleWithoutSelection: true,
+                  charCounterCount: true,
+                  toolbarContainer: "#toolbar-container",
+                  events: {
+                    initialized: function () {
+                      const secondToolbar =
+                        document.querySelector(".fr-second-toolbar");
+                      if (secondToolbar) {
+                        secondToolbar.remove();
+                      }
+                    },
+                    contentChanged: async function () {
+                      // const updatedModel = this.html.get();
+                      // placeCircles(
+                      //   updatedModel,
+                      //   requestData.documents[currentDocIndex].recommendations
+                      // );
+                      // changedModelRef.current = updatedModel;
+                    },
                   },
-                  contentChanged: async function () {
-                    // const updatedModel = this.html.get();
-                    // placeCircles(
-                    //   updatedModel,
-                    //   requestData.documents[currentDocIndex].recommendations
-                    // );
-                    // changedModelRef.current = updatedModel;
-                  },
-                },
-              }}
-            />
-          </div>
-        </div>
-        <div>
-          {requestData.documents[currentDocIndex].recommendations.map(
-            (recommendation, index) => (
-              <SuggestionCardComponent
-                key={recommendation.id}
-                num={index + 1}
-                title={recommendation.change_request_type}
-                content={recommendation.change_request_text}
-                isActive={activeRecommendation === index}
-                onTapAccept={() => replaceText(index)}
-                onTapReject={() =>
-                  console.log(
-                    `Rejected recommendation ${activeRecommendation === index}`
-                  )
-                }
-                onCoverTap={() => setActiveRecommendation(index)}
+                }}
               />
-            )
+            </div>
           )}
         </div>
+        {isLoading ? (
+          <RecommendationSkeletonLoader count={4} />
+        ) : (
+          <div>
+            {requestData.documents[currentDocIndex].recommendations.map(
+              (recommendation, index) => (
+                <SuggestionCardComponent
+                  isLoading={true}
+                  key={recommendation.id}
+                  num={index + 1}
+                  title={recommendation.change_request_type}
+                  content={recommendation.change_request_text}
+                  isActive={activeRecommendation === index}
+                  onTapAccept={() => replaceText(index)}
+                  onTapReject={() =>
+                    console.log(
+                      `Rejected recommendation ${
+                        activeRecommendation === index
+                      }`
+                    )
+                  }
+                  onCoverTap={() => setActiveRecommendation(index)}
+                />
+              )
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

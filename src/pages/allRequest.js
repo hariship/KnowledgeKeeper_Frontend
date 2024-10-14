@@ -34,7 +34,7 @@ const AllRequests = () => {
       console.error("Error fetching open requests:", error);
       setOpenRequestList([]);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 

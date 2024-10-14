@@ -1,6 +1,8 @@
 import React from "react";
 import "./skeleton-loader-style.css";
 
+
+//All Request
 const SkeletonLoaderComponent = ({ length = 10, itemClass = "default-skeleton-item" }) => {
   return (
     <div className="skeleton-container">

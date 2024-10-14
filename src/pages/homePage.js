@@ -34,6 +34,7 @@ const navigate=useNavigate();
     } else if (path.includes("document-edit")) {
       setIsTeamspaceOpen(true)
       const id = path.split("/").pop(); 
+      console.log(id,"This is the id from route")
       setActiveItem(id); 
     } else if (path.includes("feedback")) {
       setActiveItem("Feedback");

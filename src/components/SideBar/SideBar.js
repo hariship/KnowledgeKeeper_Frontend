@@ -47,7 +47,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const getClientDetails = async () => {
     const data = await apiService.getUserTeamSpace();
     setProjectList(data);
-    console.log("navigation data", data);
+    console.log("navigation activeItem", activeItem,);
   };
 
   const toggleSidebar = () => {

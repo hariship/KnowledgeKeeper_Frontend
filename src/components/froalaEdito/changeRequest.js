@@ -6,15 +6,15 @@ import icons from "../../assets/icons";
 import SvgResolveIcon from "../../icons/ResolveIcon";
 
 const ChangeRequest = ({
-  width,
-  requester,
-  date,
-  time,
-  message,
-  aiEdits,
-  onPrevious,
-  onNext,
-  onTap,
+  width = 500,  
+  requester = "Missing element", 
+  date = "N/A", 
+  time = "N/A",  
+  message = "No message available",  
+  aiEdits = "0",  
+  onPrevious = () => {},  
+  onNext = () => {},  
+  onTap = () => {},  
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [shortMessage, setShortMessage] = useState(message);

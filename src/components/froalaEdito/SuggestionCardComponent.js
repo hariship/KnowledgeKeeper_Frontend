@@ -37,7 +37,7 @@ const SuggestionCardComponent = ({
         className={`suggestion-content ${isActive ? "active" : ""}`}
         ref={contentRef}
       >
-        <p>{content}</p>
+         <div dangerouslySetInnerHTML={{ __html: content }} />
       </div>
       {isActive &&
         (!isAccepted && !isRejected ? (
