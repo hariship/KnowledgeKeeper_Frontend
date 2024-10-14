@@ -42,12 +42,17 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [projectList, setProjectList] = useState([]);
   useEffect(() => {
     getClientDetails();
-  }, [isDocDeletePopupVisible, isCreateFolderPopupVisible, isFolderDeletePopupVisible, isCreateDocPopupVisible]);
+  }, [
+    isDocDeletePopupVisible,
+    isCreateFolderPopupVisible,
+    isFolderDeletePopupVisible,
+    isCreateDocPopupVisible,
+  ]);
 
   const getClientDetails = async () => {
     const data = await apiService.getUserTeamSpace();
     setProjectList(data);
-    console.log("navigation activeItem", activeItem,);
+    console.log("navigation activeItem", activeItem);
   };
 
   const toggleSidebar = () => {
@@ -70,7 +75,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
 
   //CREATE
-  const handleCreateFolderClick = async(e) => {
+  const handleCreateFolderClick = async (e) => {
     e.stopPropagation();
     setIsCreateFolderPopupVisible(true);
   };
@@ -89,7 +94,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     setIsCreateFolderPopupVisible(false);
   };
   const handleCreateDocClick = (folderId) => {
-    setSelectedId(folderId)
+    setSelectedId(folderId);
     setIsCreateDocPopupVisible(true);
   };
 
@@ -129,8 +134,8 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
 
   const handleDeleteFolder = async () => {
-     await apiService.deleteFolder(selectedId);
-     handleCloseFolderDeletePopup();
+    await apiService.deleteFolder(selectedId);
+    handleCloseFolderDeletePopup();
   };
   const handleCloseFolderDeletePopup = () => {
     setIsFolderDeletePopupVisible(false);
@@ -166,10 +171,10 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
               data-tooltip-content={sessionStorage.getItem("email")}
               ref={profileSectionRef}
               onClick={toggleDropdown}
-            > 
-            <SvgProfile className="default-img-icon"/>
+            >
+              <SvgProfile className="default-img-icon" />
               <h2>{sessionStorage.getItem("email")}</h2>
-              <SvgDropdown className="default-img-icon"/>
+              <SvgDropdown className="default-img-icon" />
             </div>
             {isDropdownVisible && (
               <DropdownMenu
@@ -181,7 +186,10 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
               />
             )}
             <CustomTooltip id={tooltipId} />
-            <SvgCloseSidebar className="default-img-icon" onClick={toggleSidebar} />
+            <SvgCloseSidebar
+              className="default-img-icon"
+              onClick={toggleSidebar}
+            />
           </div>
           <div style={{ height: "8px" }}></div>
           <SidebarItem
@@ -227,7 +235,9 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
                     docList={e.documents}
                     onClickCreateDoc={() => handleCreateDocClick(e.id)}
                     onClickDocument={handleDocumentClick}
-                    handleOpenFolderDeletePopup={()=> handleOpenFolderDeletePopup(e.id)}
+                    handleOpenFolderDeletePopup={() =>
+                      handleOpenFolderDeletePopup(e.id)
+                    }
                     handleopendocumentdeletepopup={handleOpenDocDeletePopup}
                     activeItem={activeItem}
                   />
@@ -256,7 +266,10 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
             icon={SvgContactUs}
             isActive={activeItem === "Feedback"}
             onClick={() => {
-              navigate("feedback");
+              window.open(
+                "https://knowledgekeeper.canny.io/user-feedback",
+                "_blank"
+              );
             }}
           />
         </div>
@@ -295,7 +308,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
         buttonText="Create Document"
         isVisible={isCreateDocPopupVisible}
         onClose={handleCloseDocPopup}
-        onClick={(e)=>handleCreateDocument(selectedId,e)}
+        onClick={(e) => handleCreateDocument(selectedId, e)}
       />
       {/*Delete Folder*/}
       <DeletePopUp

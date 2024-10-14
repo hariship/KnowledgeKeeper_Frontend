@@ -374,15 +374,15 @@ class ApiService {
         }
       );
 
-      // if (response.data.status === "success") {
-      //   toast.success(
-      //     response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
-      //   );
-      // } else {
-      //   toast.error(
-      //     response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
-      //   );
-      // }
+      if (response.data.status === "success") {
+        toast.success(
+          response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+        );
+      } else {
+        toast.error(
+          response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+        );
+      }
       console.log("Response:", response.data);
       return response.data;
     } catch (error) {

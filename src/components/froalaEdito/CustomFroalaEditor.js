@@ -14,60 +14,38 @@ const FunctionalEditor = () => {
   const [requestData, setRequestData] = useState(null);
   const [model, setModel] = useState("");
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
-  const [showChangeRequest, setShowChangeRequest] = useState(true);
+  const [showChangeRequest, setShowChangeRequest] = useState(false);
   const [showResolveWarning, setShowResolveWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const changedModelRef = useRef(model);
+  const [currentRecommendationIndex, setCurrentRecommendationIndex] =
+    useState(0);
   const [activeRecommendation, setActiveRecommendation] = useState("");
-  const [editorWidth, setEditorWidth] = useState(0);
+  const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await apiService.getRecommendationForByte(36);
-        //TODO:  ADD DOCID FLOW HERE
-        setRequestData(response.data);
-        const url = response.data.documents[0].doc_content;
-        const htmlResponse = await fetch(
-          "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
-          { mode: "cors" }
-        ); //TODO : ADD URL
-        const htmlBlob = await htmlResponse.blob();
-        const htmlContent = await htmlBlob.text();
-        setModel(htmlContent);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching recommendations:", error);
-      }
+      const response = await apiService.getRecommendationForByte(36);
+      //TODO:  ADD DOCID FLOW HERE
+      setRequestData(response.data);
+      const url = response.data.documents[0].doc_content;
+      const htmlResponse = await fetch(
+        "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
+        { mode: "cors" }
+      ); //TODO : ADD URL
+      const htmlBlob = await htmlResponse.blob();
+      const htmlContent = await htmlBlob.text();
+      setActiveRecommendation(
+        response.data.documents[0].recommendations[0].previousText ||
+          "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."
+      );
+      setModel(htmlContent);
+      setIsLoading(false);
+      setShowChangeRequest(true);
     };
     fetchData();
   }, []);
-
-  // Dynamically add data-location based on previous_string
-  // useEffect(() => {
-  //   if (!requestData) return; // Wait for requestData to be loaded
-  //   const addDataLocations = () => {
-  //     let doc = document.createElement("div");
-  //     doc.innerHTML = model;
-  //     let modifiedContent = doc.innerHTML;
-  //     requestData.documents[0].recommendations.forEach((rec, index) => {
-  //       const regex = new RegExp(rec.previous_string, "g");
-  //       modifiedContent = modifiedContent.replace(regex, (match) => {
-  //         return `<span data-location="rec-${index}">${match}</span>`;
-  //       });
-  //     });
-
-  //     // Only setModel if content has actually changed
-  //     if (modifiedContent !== model) {
-  //       console.log("modifiedContent called while adding location",modifiedContent);
-  //       // setModel(modifiedContent);
-  //       //need to change this setmodel
-  //     }
-  //   };
-
-  //   addDataLocations();
-  // }, [requestData, model]);
 
   //Handle size of change Request Header
   useEffect(() => {
@@ -76,11 +54,9 @@ const FunctionalEditor = () => {
         setEditorWidth(entry.contentRect.width);
       }
     });
-
     if (editorRef.current) {
       resizeObserver.observe(editorRef.current);
     }
-
     return () => {
       if (editorRef.current) {
         resizeObserver.unobserve(editorRef.current);
@@ -88,54 +64,88 @@ const FunctionalEditor = () => {
     };
   }, [editorRef, model]);
 
-  useEffect(() => {
-    if (requestData) {
-      changedModelRef.current = model;
-      placeCircles(
-        model,
-        requestData.documents[currentDocIndex].recommendations
-      );
-    }
-  }, [model, currentDocIndex, requestData]);
+  // useEffect(() => {
+  //   if (requestData) {
+  //     changedModelRef.current = model;
+  //     placeCircles(
+  //       model,
+  //       requestData.documents[currentDocIndex].recommendations
+  //     );
+  //   }
+  // }, [model, currentDocIndex, requestData]);
 
   const handleModelChange = useCallback((newModel) => {
     setModel(newModel);
   }, []);
 
-  const replaceText = (index) => {
+  const replaceText = () => {
     if (!requestData) return;
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
     const { recommendations } = requestData.documents[currentDocIndex];
     let updatedModel = model;
-    const recommendation = recommendations[index];
+    const recommendation = recommendations[currentRecommendationIndex];
+    console.log("here in recom", recommendation);
     if (recommendation) {
-      const targetElement = doc.querySelector(`[data-location="rec-${index}"]`);
+      const previousText =
+        recommendation.previous_text ||
+        "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."; // Example text
+
+      const targetElement = findTextInElement(doc.body, previousText);
       if (targetElement) {
-        const content = targetElement.innerHTML;
+        console.log("Target element", targetElement);
         const updatedContent = recommendation.change_request_text;
+        const content = targetElement.textContent;
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
     setModel(updatedModel);
   };
 
-  const highlightText = (index, color) => {
+  const findTextInElement = (element, text) => {
+    if (
+      element.nodeType === Node.TEXT_NODE &&
+      element.textContent.includes(text)
+    ) {
+      return element;
+    } else if (element.nodeType === Node.ELEMENT_NODE) {
+      for (let child of element.childNodes) {
+        const found = findTextInElement(child, text);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const highlightText = () => {
     if (!requestData) return;
+
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
+
     const { recommendations } = requestData.documents[currentDocIndex];
     let updatedModel = model;
-    const recommendation = recommendations[index];
+
+    const recommendation = recommendations[currentRecommendationIndex];
+
     if (recommendation) {
-      const targetElement = doc.querySelector(`[data-location="rec-${index}"]`);
+      const previousText =
+        recommendation.previous_text ||
+        "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt.";
+      const targetElement = findTextInElement(doc.body, previousText);
+
       if (targetElement) {
-        const content = targetElement.innerHTML;
-        const updatedContent = `<span style="background-color:${color};">${content}</span>`;
+        const content = targetElement.textContent;
+        console.log("new content", content);
+        const updatedContent = content.replace(
+          previousText,
+          `<span style="background-color: #f7ffff;">${previousText}</span>`
+        );
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
-    setModel(updatedModel);
+
+    setModel(updatedModel); // Update the model with the highlighted text
   };
 
   const addFloatingCircle = (x, y, index) => {
@@ -153,22 +163,27 @@ const FunctionalEditor = () => {
       circle.style.zIndex = 10;
       circle.isHighlighted = false;
 
-      const handleClick = () => {
-        if (circle.isHighlighted) {
-          highlightText(index - 1, "white");
-          circle.isHighlighted = false;
-        } else {
-          highlightText(index - 1, "yellow");
-          circle.isHighlighted = true;
-        }
-      };
+      // const handleClick = () => {
+      //   if (circle.isHighlighted) {
+      //     highlightText(index - 1, "white");
+      //     circle.isHighlighted = false;
+      //   } else {
+      //     highlightText(index - 1, "yellow");
+      //     circle.isHighlighted = true;
+      //   }
+      // };
 
-      circle.addEventListener("click", handleClick);
+      // circle.addEventListener("click", handleClick);
       editorContainer.appendChild(circle);
     }
   };
 
+  useEffect(() => {
+    highlightText();
+  }, [activeRecommendation]);
+
   const placeCircles = (docContent, recommendations) => {
+    // console.log("Place cirle");
     removeFloatingCircles();
     const tempDiv = document.createElement("div");
     tempDiv.style.position = "absolute";
@@ -186,22 +201,7 @@ const FunctionalEditor = () => {
           "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."; // Example text
         if (!previousText) return;
         const range = document.createRange();
-        let elementFound = null;
-        const findTextInElement = (element, text) => {
-          if (
-            element.nodeType === Node.TEXT_NODE &&
-            element.textContent.includes(text)
-          ) {
-            return element;
-          } else if (element.nodeType === Node.ELEMENT_NODE) {
-            for (let child of element.childNodes) {
-              const found = findTextInElement(child, text);
-              if (found) return found;
-            }
-          }
-          return null;
-        };
-        elementFound = findTextInElement(tempDiv, previousText);
+        let elementFound = findTextInElement(tempDiv, previousText);
         if (elementFound) {
           const startIndex = elementFound.textContent.indexOf(previousText);
           range.setStart(elementFound, startIndex);
@@ -214,13 +214,15 @@ const FunctionalEditor = () => {
           const rect = range.getBoundingClientRect();
           const x = editorRect.left;
           const y = editorRect.top + window.scrollY + changeRect.height;
+          // console.log(editorRect,"editorrect");
+          // console.log("rect",rect);
+          // console.log("Place cirle",x,y);
           addFloatingCircle(x, y, index + 1);
         } else {
         }
       });
     }
 
-    // Remove the temporary div after processing
     document.body.removeChild(tempDiv);
   };
 
@@ -233,7 +235,7 @@ const FunctionalEditor = () => {
   };
   const handleOpenResolveWarning = async () => {
     //TODO: ADD CHECKING IS ALL RECOMMENDATION ACCEPTED OR NOT
-    
+
     setShowResolveWarning(true);
     // handleCloseResolveWarning();
   };
@@ -246,19 +248,42 @@ const FunctionalEditor = () => {
     await apiService.resolveByte(requestData.request_id);
   };
   const handlePrevious = () => {
-    if (currentDocIndex > 0) {
-      removeFloatingCircles();
+    if (currentRecommendationIndex > 0) {
+      setCurrentRecommendationIndex(currentRecommendationIndex - 1);
+    } else if (currentDocIndex > 0) {
       setCurrentDocIndex(currentDocIndex - 1);
-      setModel(requestData.documents[currentDocIndex - 1].doc_content);
+      setCurrentRecommendationIndex(
+        requestData.documents[currentDocIndex - 1].recommendations.length - 1
+      );
     }
+    setActiveRecommendation(
+      "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."
+    );
+    // setActiveRecommendation(requestData.documents[currentDocIndex].recommendations[currentRecommendationIndex].previousText);
+    updateModel();
   };
 
   const handleNext = () => {
-    if (currentDocIndex < requestData.documents.length - 1) {
-      removeFloatingCircles();
+    const totalRecommendations =
+      requestData.documents[currentDocIndex].recommendations.length;
+    if (currentRecommendationIndex < totalRecommendations - 1) {
+      setCurrentRecommendationIndex(currentRecommendationIndex + 1);
+    } else if (currentDocIndex < requestData.documents.length - 1) {
       setCurrentDocIndex(currentDocIndex + 1);
-      setModel(requestData.documents[currentDocIndex + 1].doc_content);
+      setCurrentRecommendationIndex(0);
     }
+    setActiveRecommendation(
+      "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."
+    );
+    // setActiveRecommendation(requestData.documents[currentDocIndex].recommendations[currentRecommendationIndex].previousText);
+    updateModel();
+  };
+
+  const updateModel = () => {
+    const docContent = requestData.documents[currentDocIndex].doc_content;
+    setModel(docContent);
+    removeFloatingCircles();
+    placeCircles();
   };
 
   const handleOnTap = () => {
@@ -271,7 +296,6 @@ const FunctionalEditor = () => {
       <div id="editor" className="froala-editor-section">
         <div id="toolbar-container" className="toolbar-container"></div>
         <div style={{ paddingBottom: "15px" }}>
-          {" "}
           <EditorSkeleton
             height="40px"
             borderRadius="100px"
@@ -288,6 +312,13 @@ const FunctionalEditor = () => {
     );
   }
 
+  const totalRecommendations = requestData
+    ? requestData.documents.reduce(
+        (total, doc) => total + doc.recommendations.length,
+        0
+      )
+    : 0;
+
   // Extract date and time
   const { date_time, request_text, sender } = requestData;
   const date = new Date(date_time).toLocaleDateString("en-GB", {
@@ -301,7 +332,7 @@ const FunctionalEditor = () => {
   });
 
   return (
-    <div id="editor" className="froala-editor-section">
+    <div id="editor" className="froala-editor-section fade-in">
       <ResolveChangeRequestPopUp
         isVisible={showResolveWarning}
         onClickLButton={handleCloseResolveWarning}
@@ -318,13 +349,15 @@ const FunctionalEditor = () => {
         <div className="change-request">
           {showChangeRequest && (
             <ChangeRequest
-            onResolve={handleOpenResolveWarning}
+              onResolve={handleOpenResolveWarning}
               width={editorWidth}
               requester={sender}
               date={date}
               time={time}
               message={request_text}
-              aiEdits={`${currentDocIndex + 1}/${requestData.documents.length}`}
+              aiEdits={`${
+                currentRecommendationIndex + 1
+              }/${totalRecommendations}`}
               onPrevious={handlePrevious}
               onNext={handleNext}
               onTap={handleOnTap}
@@ -374,7 +407,6 @@ const FunctionalEditor = () => {
                         lastModified: new Date().getTime(),
                       });
                       await apiService.uploadDocument(htmlFile, "29", "5");
-                      console.log("api called");
                       changedModelRef.current = updatedModel;
                     },
                   },
@@ -395,16 +427,21 @@ const FunctionalEditor = () => {
                   num={index + 1}
                   title={recommendation.change_request_type}
                   content={recommendation.change_request_text}
-                  isActive={activeRecommendation === index}
-                  onTapAccept={() => replaceText(index)}
+                  isActive={currentRecommendationIndex === index}
+                  onTapAccept={replaceText}
                   onTapReject={() =>
                     console.log(
                       `Rejected recommendation ${
-                        activeRecommendation === index
+                        currentRecommendationIndex === index
                       }`
                     )
                   }
-                  onCoverTap={() => setActiveRecommendation(index)}
+                  onCoverTap={() => {
+                    setActiveRecommendation(
+                      recommendation.previousText || "Default"
+                    );
+                    setCurrentRecommendationIndex(index);
+                  }}
                 />
               )
             )}
