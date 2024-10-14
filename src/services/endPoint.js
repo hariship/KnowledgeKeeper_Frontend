@@ -13,8 +13,8 @@ export const ENDPOINTS = {
   CREATE_FOLDER: `${API_BASE_URL}clients/${CLIENT_ID}/folders`,
   CREATE_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
   GET_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
-  GET_RECOMMENDATION_SINGLE_DOC: (byteId) => `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/recommendations`,
-  // GET_RECOMMENDATION_SINGLE_DOC:(docId)=> `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
+  GET_RECOMMENDATION_SINGLE_BYTE: (byteId) => `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/recommendations`,
+  GET_RECOMMENDATION_SINGLE_DOC:(docId)=> `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
   RENAME_OR_DELETE_FOLDER: (folderId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}`,
   CHECK_USER_EXIST: `${API_BASE_URL}clients/users/exists`,

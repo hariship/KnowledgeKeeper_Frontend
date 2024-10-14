@@ -325,8 +325,8 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
         subtitle="You have to relogin to your account."
         desc="Are you sure to log out?"
         onClick={() => {
-          apiService.logout();
           navigate("/");
+          apiService.logout();
         }}
         onClose={handleCloseLogoutPopUp}
       />

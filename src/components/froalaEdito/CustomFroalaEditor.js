@@ -23,18 +23,20 @@ const FunctionalEditor = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiService.getRecommendationSingleDoc(24);
-        setRequestData(response.data);  
+        const response = await apiService.getRecommendationForByte(36);
+        //TODO:  ADD DOCID FLOW HERE
+        setRequestData(response.data);
         const url = response.data.documents[0].doc_content;
-        const htmlResponse = await fetch(url, { mode: 'cors' }); // Using 'cors' mode instead of 'no-cors' for proper fetching
+        const htmlResponse = await fetch(url, { mode: "cors" }); // Using 'cors' mode instead of 'no-cors' for proper fetching
         const htmlBlob = await htmlResponse.blob();
         const htmlContent = await htmlBlob.text(); // Converts blob to text
         setModel(htmlContent); // Set model with HTML content
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       }
     };
-  
+
     fetchData();
   }, []);
 
@@ -44,7 +46,6 @@ const FunctionalEditor = () => {
     const addDataLocations = () => {
       let doc = document.createElement("div");
       doc.innerHTML = model;
-
       let modifiedContent = doc.innerHTML;
       requestData.documents[0].recommendations.forEach((rec, index) => {
         const regex = new RegExp(rec.previous_string, "g");
@@ -53,10 +54,12 @@ const FunctionalEditor = () => {
         });
       });
 
+
       // Only setModel if content has actually changed
       if (modifiedContent !== model) {
-        console.log("modifiedContent called");
-        // setModel(modifiedContent); need to change this setmodel
+        console.log("modifiedContent called while adding location",modifiedContent);
+        // setModel(modifiedContent); 
+        //need to change this setmodel
       }
     };
 
@@ -219,10 +222,17 @@ const FunctionalEditor = () => {
     return (
       <div id="editor" className="froala-editor-section">
         <div id="toolbar-container" className="toolbar-container"></div>
-          <div style={{paddingBottom:"15px"}}>  <EditorSkeleton  height="40px" borderRadius="100px" padding="4px 0px" /></div>
+        <div style={{ paddingBottom: "15px" }}>
+          {" "}
+          <EditorSkeleton
+            height="40px"
+            borderRadius="100px"
+            padding="4px 0px"
+          />
+        </div>
         <div className="editor-suggestion">
           <div className="change-request">
-          <EditorSkeleton width="100%" height="100vh" borderRadius="4px" />
+            <EditorSkeleton width="100%" height="100vh" borderRadius="4px" />
           </div>
           <RecommendationSkeletonLoader count={4} />
         </div>
@@ -291,12 +301,12 @@ const FunctionalEditor = () => {
                       }
                     },
                     contentChanged: async function () {
-                      // const updatedModel = this.html.get();
-                      // placeCircles(
-                      //   updatedModel,
-                      //   requestData.documents[currentDocIndex].recommendations
-                      // );
-                      // changedModelRef.current = updatedModel;
+                      const updatedModel = this.html.get();
+                      placeCircles(
+                        updatedModel,
+                        requestData.documents[currentDocIndex].recommendations
+                      );
+                      changedModelRef.current = updatedModel;
                     },
                   },
                 }}

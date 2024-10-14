@@ -201,7 +201,7 @@ class ApiService {
       const response = await axios.get(`${ENDPOINTS.GET_DOCUMENT}/${docId}`, {
         headers: getHeaders(true),
       });
-      
+
       // Handle success response
       if (response.status === 200) {
         console.log("Document fetched successfully", response.data);
@@ -225,12 +225,12 @@ class ApiService {
     try {
       // Construct the API endpoint with the provided clientId and docId
       const url = `${ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(byteId)}`;
-  
+
       // Make the API request
       const response = await axios.get(url, {
         headers: getHeaders(true),
       });
-  
+
       // Handle success response
       if (response.status === 200) {
         console.log("Recommendations fetched successfully", response.data);
@@ -251,9 +251,10 @@ class ApiService {
   }
 
   //Create Document
-  async createDocument(documentName,folderId) {
+  async createDocument(documentName, folderId) {
     try {
-      const emptyHtmlContent = "<!DOCTYPE html>\n<html>\n<head>\n<title>Empty Document</title>\n</head>\n<body>\n</body>\n</html>";
+      const emptyHtmlContent =
+        "<!DOCTYPE html>\n<html>\n<head>\n<title>Empty Document</title>\n</head>\n<body>\n</body>\n</html>";
       const blob = new Blob([emptyHtmlContent], { type: "text/html" });
       const file = new File([blob], "document.html", { type: "text/html" });
       const formData = new FormData();
@@ -394,10 +395,10 @@ class ApiService {
   }
 
   //GET RECOMMENDATION FOR SINGLE DOCUMENT
-  async getRecommendationSingleDoc(byteId) {
+  async getRecommendationSingleDoc(docId) {
     try {
       const response = await axios.get(
-        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(byteId),
+        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(docId),
         {
           headers: getHeaders(true),
         }
@@ -409,7 +410,27 @@ class ApiService {
       toast.error(
         error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD
       );
-      return error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD
+      return error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD;
+    }
+  }
+
+  //GET RECOMMENDATION FOR SINGLE BYTE
+  async getRecommendationForByte(byteId) {
+    try {
+      const response = await axios.get(
+        ENDPOINTS.GET_RECOMMENDATION_SINGLE_BYTE(byteId),
+        {
+          headers: getHeaders(true),
+        }
+      );
+      console.log("Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error Response:", error);
+      toast.error(
+        error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD
+      );
+      return error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD;
     }
   }
 
@@ -453,9 +474,12 @@ class ApiService {
   //Delete FOLDER
   async deleteFolder(folderId) {
     try {
-      const response = await axios.delete(ENDPOINTS.RENAME_OR_DELETE_FOLDER(folderId), {
-        headers: getHeaders(true),
-      });
+      const response = await axios.delete(
+        ENDPOINTS.RENAME_OR_DELETE_FOLDER(folderId),
+        {
+          headers: getHeaders(true),
+        }
+      );
       return response.data;
     } catch (error) {
       toast.error(
@@ -468,9 +492,12 @@ class ApiService {
   //Delete Document
   async deleteDocument(docId) {
     try {
-      const response = await axios.delete(ENDPOINTS.RENAME_OR_DELETE_DOCUMENT(docId), {
-        headers: getHeaders(true),
-      });
+      const response = await axios.delete(
+        ENDPOINTS.RENAME_OR_DELETE_DOCUMENT(docId),
+        {
+          headers: getHeaders(true),
+        }
+      );
       return response.data;
     } catch (error) {
       toast.error(

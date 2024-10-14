@@ -10,8 +10,11 @@ import ResolveChangeRequestPopUp from "../components/PopUps/ResolveChangeRequest
 import SvgAddIcon from "../icons/AddIcon.js";
 import { apiService } from "../services/apiService.js";
 import SkeletonLoaderComponent from "../components/loading-screen/SkeletonLoaderComponent.js";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AllRequests = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("open");
   const [showAddChangeRequestPopUp, setAddChangeRequestPopUp] = useState(false);
   const [showDeleteDocPopUp, setDeleteDocPopUp] = useState(false);
@@ -34,7 +37,7 @@ const AllRequests = () => {
       console.error("Error fetching open requests:", error);
       setOpenRequestList([]);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -95,11 +98,18 @@ const AllRequests = () => {
     setAddChangeRequestPopUp(false);
   };
 
-  const handleRequestClick = (byteId,aiEdits) => {
+  const handleRequestClick = async (byteId, aiEdits) => {
     if (aiEdits === 0) {
       handleZeroEditPopUp();
+    } else {
+      const result = await apiService.getRecommendationForByte(byteId);
+      if (result.status === "success") {
+        navigate("/home/document-edit/29");
+        // navigate(`/home/document-edit/${result.data.documents[0].doc_id}`); //TODO REPLACE WITH DOCID
+      } else {
+        toast.error(result.message);
+      }
     }
-    // Get byte with recommendations api to be called with status open
   };
   return (
     <div className="all-request-home">
@@ -147,7 +157,7 @@ const AllRequests = () => {
                 date={item.clientId.createdAt}
                 aiEdits={item.noOfRecommendations}
                 onClick={() => {
-                  handleRequestClick(item.id,item.noOfRecommendations);
+                  handleRequestClick(item.id, item.noOfRecommendations);
                 }}
                 onClickDelete={() => {
                   handleDeleteDocPopUp(item.id);
