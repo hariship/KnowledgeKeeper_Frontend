@@ -12,17 +12,23 @@ const OpenRequestComponent = ({
   onClickDelete,
 }) => {
   const tooltipId = "open-request-tooltip";
-  const formatDate = (dateString) => {
-    const options = { day: "2-digit", month: "long", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-GB", options);
-  };
+  const byteDate = new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = new Date(date).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
     <div className="open-request-container" onClick={onClick}>
       <div className="main-content">
         <p data-tooltip-id={tooltipId} data-tooltip-content={title}>{title}</p>
         <div className="main-content-row">
           <span>{employee_name}</span>
-          <p>{formatDate(date)}</p>
+          <p>{byteDate} {time}</p>
         </div>
       </div>
       <div className="ai-edit">

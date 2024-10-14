@@ -18,6 +18,19 @@ const getHeaders = (isProtected = false) => {
   }
   return headers;
 };
+const getFormHeaders = (isProtected = false) => {
+  const headers = {
+    "Content-Type": "multipart/form-data",
+    "x-api-key": API_KEY,
+  };
+  if (isProtected) {
+    const token = sessionStorage.getItem("authToken");
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return headers;
+};
 
 class ApiService {
   //LOGIN WITH EMAIL
@@ -162,18 +175,14 @@ class ApiService {
   }
 
   //Upload Document
-  async uploadDocument(file, clientId, clientName) {
+  async uploadDocument(file, docId, clientId) {
     try {
       const formData = new FormData();
-      formData.append("file", file, "document.html");
+      formData.append("file", file);
       formData.append("clientId", clientId);
-      formData.append("clientName", clientName);
-      //TODO remove for
-      // for (let pair of formData.entries()) {
-      //   console.log(`${pair[0]}:`, pair[1]);
-      // }
+      formData.append("documentId", docId);
       const response = await axios.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
-        headers: getHeaders(true),
+        headers: getFormHeaders(true),
       });
 
       if (response.data.status) {
@@ -197,12 +206,9 @@ class ApiService {
   //GET DOCUMENT
   async getDocument(docId) {
     try {
-      // Make the API request
       const response = await axios.get(`${ENDPOINTS.GET_DOCUMENT}/${docId}`, {
         headers: getHeaders(true),
       });
-
-      // Handle success response
       if (response.status === 200) {
         console.log("Document fetched successfully", response.data);
         return response.data;
@@ -221,32 +227,43 @@ class ApiService {
     }
   }
 
-  async getDocumentWithRecommendations(byteId) {
+  //RESOLVE BYTE
+  async resolveByte(byteId) {
     try {
-      // Construct the API endpoint with the provided clientId and docId
-      const url = `${ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(byteId)}`;
-
-      // Make the API request
-      const response = await axios.get(url, {
+      const requestBody = {
+        resolutionDetails:
+          "The issue was resolved by updating the signal strength.",
+      };
+      const url = `${ENDPOINTS.RESOLVE_BYTE(byteId)}`;
+      const response = await axios.post(url, requestBody, {
         headers: getHeaders(true),
       });
-
-      // Handle success response
       if (response.status === 200) {
-        console.log("Recommendations fetched successfully", response.data);
+        toast.success(response.data.message);
         return response.data;
-      } else {
-        throw new Error("Failed to fetch recommendations");
       }
     } catch (error) {
-      console.error(
-        "Error fetching recommendations:",
-        error.response?.data || error.message
-      );
       toast.error(
         error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
       );
-      throw error;
+    }
+  }
+
+  //Get Trash Bytes
+  async GetTrashBytes(byteId) {
+    try {
+      const url = `${ENDPOINTS.GET_TRASH}`;
+      const response = await axios.get(url, {
+        headers: getHeaders(true),
+      });
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        return response.data;
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
     }
   }
 

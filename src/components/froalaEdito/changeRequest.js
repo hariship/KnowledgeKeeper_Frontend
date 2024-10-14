@@ -6,15 +6,16 @@ import icons from "../../assets/icons";
 import SvgResolveIcon from "../../icons/ResolveIcon";
 
 const ChangeRequest = ({
-  width = 500,  
-  requester = "Missing element", 
-  date = "N/A", 
-  time = "N/A",  
-  message = "No message available",  
-  aiEdits = "0",  
-  onPrevious = () => {},  
-  onNext = () => {},  
-  onTap = () => {},  
+  width = 300, // Fallback to a default width
+  requester = "Missing element", // Fallback if 'requester' is missing
+  date = "N/A", // Fallback for 'date'
+  time = "N/A", // Fallback for 'time'
+  message = "No message available", // Default message if 'message' prop is missing
+  aiEdits = "0", // Default value for aiEdits if it's missing
+  onPrevious = () => {},
+  onResolve = () => {},
+  onNext = () => {},
+  onTap = () => {},
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [shortMessage, setShortMessage] = useState(message);
@@ -42,12 +43,12 @@ const ChangeRequest = ({
   const getVisibleCharacters = (msg, containerWidth) => {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
-    context.font = "16px Arial"; 
+    context.font = "16px Arial";
 
     let textWidth = context.measureText(msg).width;
     let visibleChars = msg;
     if (textWidth > containerWidth) {
-      let ellipsis = '...';
+      let ellipsis = "...";
       let maxWidth = containerWidth - context.measureText(ellipsis).width;
       let currentWidth = 0;
 
@@ -71,12 +72,25 @@ const ChangeRequest = ({
 
   return (
     <div>
-      <div className="change-request-container" ref={changeRequestRef} style={{ width: `${width}px` }}>
+      <div
+        className="change-request-container"
+        ref={changeRequestRef}
+        style={{ width: `${width}px` }}
+      >
         <div className="change-request-header">
           Change Request
-          <img className="close-button" src={icons.activeCloseIcon} alt="close" onClick={onTap} />
+          <img
+            className="close-button"
+            src={icons.activeCloseIcon}
+            alt="close"
+            onClick={onTap}
+          />
         </div>
-        <div className={`change-request-body ${isExpanded ? "expanded" : "collapsed"}`}>
+        <div
+          className={`change-request-body ${
+            isExpanded ? "expanded" : "collapsed"
+          }`}
+        >
           {isExpanded ? message : shortMessage}
           {shouldShowReadMore && (
             <span className="read-more-toggle" onClick={handleToggle}>
@@ -86,14 +100,16 @@ const ChangeRequest = ({
         </div>
         <div className="change-request-details">
           <div>
-            <div className="resolve-option">
+            <div className="resolve-option" onClick={onResolve}>
               Resolve
               <SvgResolveIcon className="resolve-icon" />
             </div>
             <div className="change-request-requester">
               <span>{requester}</span>
               <span>|</span>
-              <span>{date} {time}</span>
+              <span>
+                {date} {time}
+              </span>
             </div>
           </div>
           <div className="change-request-footer">

@@ -8,12 +8,14 @@ import "./editor-style.css";
 import { apiService } from "../../services/apiService";
 import RecommendationSkeletonLoader from "../loading-screen/RecommendationSkeleton.js";
 import EditorSkeleton from "../loading-screen/EditorSkeleton.js";
+import ResolveChangeRequestPopUp from "../PopUps/ResolveChangeRequestPopUp.js";
 
 const FunctionalEditor = () => {
-  const [requestData, setRequestData] = useState(null); // Start with null to detect loading state
+  const [requestData, setRequestData] = useState(null);
   const [model, setModel] = useState("");
   const [currentDocIndex, setCurrentDocIndex] = useState(0);
-  const [showChangeRequest, setShowChangeRequest] = useState(false);
+  const [showChangeRequest, setShowChangeRequest] = useState(true);
+  const [showResolveWarning, setShowResolveWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const changedModelRef = useRef(model);
   const [activeRecommendation, setActiveRecommendation] = useState("");
@@ -27,49 +29,50 @@ const FunctionalEditor = () => {
         //TODO:  ADD DOCID FLOW HERE
         setRequestData(response.data);
         const url = response.data.documents[0].doc_content;
-        const htmlResponse = await fetch(url, { mode: "cors" }); // Using 'cors' mode instead of 'no-cors' for proper fetching
+        const htmlResponse = await fetch(
+          "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
+          { mode: "cors" }
+        ); //TODO : ADD URL
         const htmlBlob = await htmlResponse.blob();
-        const htmlContent = await htmlBlob.text(); // Converts blob to text
-        setModel(htmlContent); // Set model with HTML content
+        const htmlContent = await htmlBlob.text();
+        setModel(htmlContent);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching recommendations:", error);
       }
     };
-
     fetchData();
   }, []);
 
   // Dynamically add data-location based on previous_string
-  useEffect(() => {
-    if (!requestData) return; // Wait for requestData to be loaded
-    const addDataLocations = () => {
-      let doc = document.createElement("div");
-      doc.innerHTML = model;
-      let modifiedContent = doc.innerHTML;
-      requestData.documents[0].recommendations.forEach((rec, index) => {
-        const regex = new RegExp(rec.previous_string, "g");
-        modifiedContent = modifiedContent.replace(regex, (match) => {
-          return `<span data-location="rec-${index}">${match}</span>`;
-        });
-      });
+  // useEffect(() => {
+  //   if (!requestData) return; // Wait for requestData to be loaded
+  //   const addDataLocations = () => {
+  //     let doc = document.createElement("div");
+  //     doc.innerHTML = model;
+  //     let modifiedContent = doc.innerHTML;
+  //     requestData.documents[0].recommendations.forEach((rec, index) => {
+  //       const regex = new RegExp(rec.previous_string, "g");
+  //       modifiedContent = modifiedContent.replace(regex, (match) => {
+  //         return `<span data-location="rec-${index}">${match}</span>`;
+  //       });
+  //     });
 
+  //     // Only setModel if content has actually changed
+  //     if (modifiedContent !== model) {
+  //       console.log("modifiedContent called while adding location",modifiedContent);
+  //       // setModel(modifiedContent);
+  //       //need to change this setmodel
+  //     }
+  //   };
 
-      // Only setModel if content has actually changed
-      if (modifiedContent !== model) {
-        console.log("modifiedContent called while adding location",modifiedContent);
-        // setModel(modifiedContent); 
-        //need to change this setmodel
-      }
-    };
+  //   addDataLocations();
+  // }, [requestData, model]);
 
-    addDataLocations();
-  }, [requestData, model]);
-
+  //Handle size of change Request Header
   useEffect(() => {
     const resizeObserver = new ResizeObserver((entries) => {
       for (let entry of entries) {
-        console.log("width of change request", entry.contentRect.width);
         setEditorWidth(entry.contentRect.width);
       }
     });
@@ -132,7 +135,7 @@ const FunctionalEditor = () => {
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
-    // setModel(updatedModel);
+    setModel(updatedModel);
   };
 
   const addFloatingCircle = (x, y, index) => {
@@ -166,7 +169,6 @@ const FunctionalEditor = () => {
   };
 
   const placeCircles = (docContent, recommendations) => {
-    console.log("place circles");
     removeFloatingCircles();
     const tempDiv = document.createElement("div");
     tempDiv.style.position = "absolute";
@@ -175,18 +177,50 @@ const FunctionalEditor = () => {
     tempDiv.style.left = "0";
     tempDiv.innerHTML = docContent;
     document.body.appendChild(tempDiv);
+
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer) {
       recommendations.forEach((rec, index) => {
-        const element = tempDiv.querySelector(`[data-location="rec-${index}"]`);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          const x = rect.left + window.scrollX;
-          const y = rect.top + window.scrollY;
+        const previousText =
+          rec.previous_text ||
+          "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."; // Example text
+        if (!previousText) return;
+        const range = document.createRange();
+        let elementFound = null;
+        const findTextInElement = (element, text) => {
+          if (
+            element.nodeType === Node.TEXT_NODE &&
+            element.textContent.includes(text)
+          ) {
+            return element;
+          } else if (element.nodeType === Node.ELEMENT_NODE) {
+            for (let child of element.childNodes) {
+              const found = findTextInElement(child, text);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        elementFound = findTextInElement(tempDiv, previousText);
+        if (elementFound) {
+          const startIndex = elementFound.textContent.indexOf(previousText);
+          range.setStart(elementFound, startIndex);
+          range.setEnd(elementFound, startIndex + previousText.length);
+          const changeRequest = document.querySelector(
+            ".change-request-container"
+          );
+          const changeRect = changeRequest.getBoundingClientRect();
+          const editorRect = editorContainer.getBoundingClientRect();
+          const rect = range.getBoundingClientRect();
+          const x = editorRect.left;
+          const y = editorRect.top + window.scrollY + changeRect.height;
           addFloatingCircle(x, y, index + 1);
+        } else {
         }
       });
     }
+
+    // Remove the temporary div after processing
     document.body.removeChild(tempDiv);
   };
 
@@ -197,12 +231,25 @@ const FunctionalEditor = () => {
       circles.forEach((circle) => circle.remove());
     }
   };
+  const handleOpenResolveWarning = async () => {
+    //TODO: ADD CHECKING IS ALL RECOMMENDATION ACCEPTED OR NOT
+    
+    setShowResolveWarning(true);
+    // handleCloseResolveWarning();
+  };
 
+  const handleCloseResolveWarning = () => {
+    setShowResolveWarning(false);
+  };
+
+  const handleResolveByte = async () => {
+    await apiService.resolveByte(requestData.request_id);
+  };
   const handlePrevious = () => {
     if (currentDocIndex > 0) {
       removeFloatingCircles();
       setCurrentDocIndex(currentDocIndex - 1);
-      // setModel(requestData.documents[currentDocIndex - 1].doc_content);
+      setModel(requestData.documents[currentDocIndex - 1].doc_content);
     }
   };
 
@@ -210,7 +257,7 @@ const FunctionalEditor = () => {
     if (currentDocIndex < requestData.documents.length - 1) {
       removeFloatingCircles();
       setCurrentDocIndex(currentDocIndex + 1);
-      // setModel(requestData.documents[currentDocIndex + 1].doc_content);
+      setModel(requestData.documents[currentDocIndex + 1].doc_content);
     }
   };
 
@@ -218,6 +265,7 @@ const FunctionalEditor = () => {
     setShowChangeRequest(false);
   };
 
+  //LOADING
   if (!requestData) {
     return (
       <div id="editor" className="froala-editor-section">
@@ -254,12 +302,23 @@ const FunctionalEditor = () => {
 
   return (
     <div id="editor" className="froala-editor-section">
+      <ResolveChangeRequestPopUp
+        isVisible={showResolveWarning}
+        onClickLButton={handleCloseResolveWarning}
+        onClickRButton={handleResolveByte}
+        onClose={handleCloseResolveWarning}
+        title="5 Open AiEdits" //change number
+        subtitle="Do you still wish to resolve the Change Request ?"
+        lButtonText="Resolve CR"
+        rButtonText="View AiEdits"
+      />
       {/* Toolbar Container */}
       <div id="toolbar-container" className="toolbar-container"></div>
       <div className="editor-suggestion">
         <div className="change-request">
           {showChangeRequest && (
             <ChangeRequest
+            onResolve={handleOpenResolveWarning}
               width={editorWidth}
               requester={sender}
               date={date}
@@ -306,6 +365,16 @@ const FunctionalEditor = () => {
                         updatedModel,
                         requestData.documents[currentDocIndex].recommendations
                       );
+                      const htmlBlob = new Blob([updatedModel], {
+                        type: "text/html",
+                      });
+                      const fileName = `document_29.html`; //replace number with docId
+                      const htmlFile = new File([htmlBlob], fileName, {
+                        type: "text/html",
+                        lastModified: new Date().getTime(),
+                      });
+                      await apiService.uploadDocument(htmlFile, "29", "5");
+                      console.log("api called");
                       changedModelRef.current = updatedModel;
                     },
                   },

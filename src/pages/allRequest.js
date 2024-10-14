@@ -12,16 +12,19 @@ import { apiService } from "../services/apiService.js";
 import SkeletonLoaderComponent from "../components/loading-screen/SkeletonLoaderComponent.js";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { FiRefreshCw } from 'react-icons/fi';
 
 const AllRequests = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("open");
   const [showAddChangeRequestPopUp, setAddChangeRequestPopUp] = useState(false);
   const [showDeleteDocPopUp, setDeleteDocPopUp] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
   const [showZeroAIEditPopUp, setZeroAIEditPopUp] = useState(false);
   const [openRequestList, setOpenRequestList] = useState([]);
   const [resolvedRequestList, setResolvedRequestList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timeSinceLastRefresh, setTimeSinceLastRefresh] = useState("");
   const [selectedByte, setSelectedByte] = useState("");
   useEffect(() => {
     getOpenRequests();
@@ -31,15 +34,39 @@ const AllRequests = () => {
     try {
       setLoading(true);
       const data = await apiService.getOpenChangeRequest();
-      console.log("here is the data", data);
       setOpenRequestList(Array.isArray(data) ? data : []);
+      setLastRefreshTime(new Date());
     } catch (error) {
-      console.error("Error fetching open requests:", error);
       setOpenRequestList([]);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeSinceLastRefresh(getTimeSinceLastRefresh());
+    }, 15); 
+    return () => clearInterval(interval); 
+  }, [lastRefreshTime]);
+  
+  
+  const getTimeSinceLastRefresh = () => {
+    if (!lastRefreshTime) return "";
+
+  
+    const seconds = Math.floor((new Date() - lastRefreshTime) / 1000);
+  
+    if (seconds < 10) return "just now"; 
+    if (seconds < 60) return "a few seconds ago"; 
+  
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minutes ago`;
+  
+    const hours = Math.floor(minutes / 60);
+    return `${hours} hours ago`;
+  };
+  
 
   const getClosedRequests = async () => {
     try {
@@ -89,6 +116,13 @@ const AllRequests = () => {
       handleCloseDeleteDocPopUp();
     }
   };
+  const handleResolveByte = async () => {
+    console.log(selectedByte);
+    await apiService.resolveByte(selectedByte);
+
+    handleCloseZeroEditPopUp();
+    getOpenRequests();
+  };
 
   const handlePopupToggle = () => {
     setAddChangeRequestPopUp(true);
@@ -100,6 +134,7 @@ const AllRequests = () => {
 
   const handleRequestClick = async (byteId, aiEdits) => {
     if (aiEdits === 0) {
+      setSelectedByte(byteId);
       handleZeroEditPopUp();
     } else {
       const result = await apiService.getRecommendationForByte(byteId);
@@ -129,12 +164,23 @@ const AllRequests = () => {
             Resolved
           </button>
         </div>
-        {openRequestList.length > 0 && (
-          <div className="change-request-option" onClick={handlePopupToggle}>
-            <img src={icons.addIcon} alt="icon" />
-            <p>Change Request</p>
-          </div>
-        )}
+        <div style={{display:"flex",flexDirection:"row"}}>
+        
+          {activeTab === "open" && openRequestList.length > 0 && (
+  <div className="refresh-button" onClick={getOpenRequests}>
+    <button>
+      <span>Refreshed {timeSinceLastRefresh}</span>
+      <FiRefreshCw size={12} />
+    </button>
+  </div>
+)}
+          {openRequestList.length > 0 && (
+            <div className="change-request-option" onClick={handlePopupToggle}>
+              <img src={icons.addIcon} alt="icon" />
+              <p>Change Request</p>
+            </div>
+          )}
+        </div>
       </div>
       <div className="tab-content">
         {" "}
@@ -154,7 +200,7 @@ const AllRequests = () => {
                 key={index}
                 title={item.byteInfo}
                 employee_name={item.clientId.clientName}
-                date={item.clientId.createdAt}
+                date={item.createdAt}
                 aiEdits={item.noOfRecommendations}
                 onClick={() => {
                   handleRequestClick(item.id, item.noOfRecommendations);
@@ -201,6 +247,8 @@ const AllRequests = () => {
       />
       <ResolveChangeRequestPopUp
         isVisible={showZeroAIEditPopUp}
+        onClickLButton={handleResolveByte}
+        onClickRButton={handleResolveByte}
         onClose={handleCloseZeroEditPopUp}
         title="0 AI edits"
         subtitle="KnowledgeKeeper AI did not find this relevant."

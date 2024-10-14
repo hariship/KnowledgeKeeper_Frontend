@@ -476,7 +476,7 @@ const LoginPage = () => {
         <span onClick={handleContactUs} className="contact-us">
           Contact Us
         </span>
-        <span className="terms-conditions">Terms & Conditions</span>
+        {/* <span className="terms-conditions">Terms & Conditions</span> */}
       </div>
     </div>
   );

@@ -13,11 +13,16 @@ export const ENDPOINTS = {
   CREATE_FOLDER: `${API_BASE_URL}clients/${CLIENT_ID}/folders`,
   CREATE_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
   GET_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
-  GET_RECOMMENDATION_SINGLE_BYTE: (byteId) => `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/recommendations`,
-  GET_RECOMMENDATION_SINGLE_DOC:(docId)=> `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
+GET_TRASH: `${API_BASE_URL}clients/${CLIENT_ID}/bytes/trash`,
+  GET_RECOMMENDATION_SINGLE_BYTE: (byteId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/recommendations`,
+  GET_RECOMMENDATION_SINGLE_DOC: (docId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
   RENAME_OR_DELETE_FOLDER: (folderId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}`,
   CHECK_USER_EXIST: `${API_BASE_URL}clients/users/exists`,
   RENAME_OR_DELETE_DOCUMENT: (docId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}`,
+  RESOLVE_BYTE: (byteId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/resolve-or-closed`,
 };
