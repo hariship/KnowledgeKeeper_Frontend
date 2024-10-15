@@ -135,6 +135,12 @@
   justify-content: start;
 }
 
+.warning-text{
+  color: red;
+  font-size: var(--ten-font-size);
+  margin: 5px 0px;
+}
+
 .text-form-field-popup input {
   width: 97%;
   margin-top: 5px !important;

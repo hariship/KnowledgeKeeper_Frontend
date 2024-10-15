@@ -4,7 +4,7 @@ import "./sidebar-style.css";
 import icons from "../../assets/icons";
 import DropdownMenu from "../PopUps/DropDown";
 import RenamePopUp from "../PopUps/RenamePopUp";
-// import InviteMemebersPopUp from "../PopUps/InviteMembersPopUp";
+import InviteMemebersPopUp from "../PopUps/InviteMembersPopUp";
 import CustomTooltip from "../PopUps/CustomToolTip";
 import { apiService } from "../../services/apiService";
 import SvgAddIcon from "../../icons/AddIcon";
@@ -15,190 +15,198 @@ import SvgDocumentIcon from "../../icons/DocumentIcon";
 import SvgActiveFolder from "../../icons/ActiveFolder";
 import SvgActiveRightArrow from "../../icons/ActiveRightArrow";
 import SvgFolderIcon from "../../icons/FolderIcon";
+import DeletePopUp from "../PopUps/DeletePopUp";
 
-// const TeamSpace = ({
-//   title,
-//   folderList,
-//   onClickCreateFolder,
-//   onClickCreateDoc,
-//   onClickDocument,
-//   activeItem,
-// }) => {
-//   const [isOpen, setIsOpen] = useState(false);
-//   const [showDropdown, setShowDropdown] = useState(false);
-//   const [isHovered, setIsHovered] = useState(false);
-//   const [isDeletePopupVisible, setIsDeletePopupVisible] = useState(false);
-//   const [isRenameVisible, setIsRenameVisible] = useState(false);
-//   const [isInviteMemberPopupVisible, setIsInviteMemberPopUpVisible] =
-//     useState(false);
-//   const handleMouseEnter = () => setIsHovered(true);
-//   const handleMouseLeave = () => setIsHovered(false);
-//   const teamSpaceRef = useRef(null);
-//   const menuRef = useRef(null);
-//   const tooltipId = "teamspace-tooltip";
+const TeamSpace = ({
+  title,
+  folderList,
+  onClickCreateFolder,
+  onClickCreateDoc,
+  onClickDocument,
+  handleOpenFolderDeletePopup,
+  handleopendocumentdeletepopup,
+  activeItem,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDeletePopupVisible, setIsDeletePopupVisible] = useState(false);
+  const [isRenameVisible, setIsRenameVisible] = useState(false);
+  const [isInviteMemberPopupVisible, setIsInviteMemberPopUpVisible] =
+    useState(false);
+  const handleMouseEnter = () => setIsHovered(true);
+  const handleMouseLeave = () => setIsHovered(false);
+  const teamSpaceRef = useRef(null);
+  const menuRef = useRef(null);
+  const tooltipId = "teamspace-tooltip";
 
-//   // Check if any folder in the team contains the active item
-//   useEffect(() => {
-//     const isActiveInTeam = folderList.some((folder) =>
-//       folder.documents.some((doc) => doc.doc_id === activeItem)
-//     );
-//     if (isActiveInTeam) setIsOpen(true);
-//   }, [activeItem, folderList]);
+  // Check if any folder in the team contains the active item
+  useEffect(() => {
+    const isActiveInTeam = folderList.some((folder) =>
+      folder.documents.some((doc) => doc.doc_id === activeItem)
+    );
+    if (isActiveInTeam) setIsOpen(true);
+  }, [activeItem, folderList]);
 
-//   const toggleOpen = () => {
-//     if (folderList && folderList.length > 0) {
-//       setIsOpen(!isOpen);
-//     }
-//   };
+  const toggleOpen = () => {
+    if (folderList && folderList.length > 0) {
+      setIsOpen(!isOpen);
+    }
+  };
 
-//   const handleCloseMenu = () => {
-//     setShowDropdown(false);
-//   };
+  const handleCloseMenu = () => {
+    setShowDropdown(false);
+  };
 
-//   const handleMenuClick = (e) => {
-//     e.stopPropagation();
-//     setShowDropdown((prevShowDropdown) => !prevShowDropdown);
-//   };
+  const handleMenuClick = (e) => {
+    e.stopPropagation();
+    setShowDropdown((prevShowDropdown) => !prevShowDropdown);
+  };
 
-//   const handleAddClick = (e) => {
-//     e.stopPropagation();
-//     onClickCreateFolder();
-//   };
+  const handleAddClick = (e) => {
+    e.stopPropagation();
+    onClickCreateFolder();
+  };
 
-//   const handleOpenDeletePopup = () => {
-//     setIsDeletePopupVisible(true);
-//   };
+  const handleOpenDeletePopup = () => {
+    setIsDeletePopupVisible(true);
+  };
 
-//   const handleCloseDeletePopup = () => {
-//     setIsDeletePopupVisible(false);
-//   };
-//   const handleOpenRenamePopUp = () => {
-//     handleCloseMenu();
-//     setIsRenameVisible(true);
-//   };
+  const handleCloseDeletePopup = () => {
+    setIsDeletePopupVisible(false);
+  };
+  const handleOpenRenamePopUp = () => {
+    handleCloseMenu();
+    setIsRenameVisible(true);
+  };
 
-//   const handleCloseRenamePopUp = () => {
-//     setIsRenameVisible(false);
-//   };
+  const handleCloseRenamePopUp = () => {
+    setIsRenameVisible(false);
+  };
 
-//   const handleOpenInvitePopUp = () => {
-//     setIsInviteMemberPopUpVisible(true);
-//   };
+  const handleOpenInvitePopUp = () => {
+    setIsInviteMemberPopUpVisible(true);
+  };
 
-//   const handleCloseInvitePopUp = () => {
-//     setIsInviteMemberPopUpVisible(false);
-//   };
+  const handleCloseInvitePopUp = () => {
+    setIsInviteMemberPopUpVisible(false);
+  };
 
-//   const dropdownOptions = [
-//     {
-//       label: "Invite Teammates",
-//       icon: icons.inviteMemberIcon,
-//       onClick: handleOpenInvitePopUp,
-//     },
-//     {
-//       label: "Rename",
-//       icon: icons.renameIcon,
-//       onClick: handleOpenRenamePopUp,
-//     },
-//     {
-//       label: "Delete",
-//       icon: icons.trashIcon,
-//       onClick: handleOpenDeletePopup,
-//     },
-//   ];
+  const dropdownOptions = [
+    {
+      label: "Invite Teammates",
+      icon: icons.inviteMemberIcon,
+      onClick: handleOpenInvitePopUp,
+    },
+    {
+      label: "Rename",
+      icon: icons.renameIcon,
+      onClick: handleOpenRenamePopUp,
+    },
+    {
+      label: "Delete",
+      icon: icons.trashIcon,
+      onClick: handleOpenDeletePopup,
+    },
+  ];
 
-//   const currentIcon = isHovered
-//     ? isOpen
-//       ? icons.activeTeam
-//       : icons.activeRightArrow
-//     : icons.teamspaceIcon;
-//   return (
-//     <div>
-//       {/*Kebab Menu*/}
-//       {showDropdown && (
-//         <DropdownMenu
-//           referenceElement={menuRef.current}
-//           exceptionRef={menuRef}
-//           options={dropdownOptions}
-//           onClose={handleCloseMenu}
-//         />
-//       )}
-//       {/*Invite Members*/}
-//       <InviteMemebersPopUp
-//         isVisible={isInviteMemberPopupVisible}
-//         onClick={handleCloseMenu} //TODO
-//         onClose={handleCloseInvitePopUp}
-//       />
-//       {/*Delete Option*/}
-//       <DeletePopUp
-//         isVisible={isDeletePopupVisible}
-//         title="Delete Teamspace"
-//         buttonText="Delete"
-//         subtitle="You will lost you all folder and documents"
-//         desc="Are you sure to delete team permanently?"
-//         onClick={() => {}}
-//         onClose={handleCloseDeletePopup}
-//       />
-//       {/*Rename*/}
-//       {isRenameVisible && (
-//         <RenamePopUp
-//           title={title}
-//           referenceElement={teamSpaceRef.current}
-//           onClose={handleCloseRenamePopUp}
-//           exceptionRef={teamSpaceRef}
-//         />
-//       )}
-//       <CustomTooltip id={tooltipId} />
-//       <div
-//         data-tooltip-id={tooltipId}
-//         data-tooltip-content={title}
-//         className="show-row-space-between"
-//         onClick={toggleOpen}
-//         onMouseEnter={handleMouseEnter}
-//         onMouseLeave={handleMouseLeave}
-//       >
-//         <div className="teamspace-header">
-//           <img alt="icon" src={currentIcon} />
-//           <span
-//             ref={teamSpaceRef}
-//             className={`folder-title ${isHovered ? "active" : ""}`}
-//           >
-//             {title}
-//           </span>
-//         </div>
-//         <div style={{ display: "flex", flexDirection: "row" }}>
-//           <img
-//             className="hide-icon"
-//             alt="menu"
-//             ref={menuRef}
-//             src={icons.activeMenuIcon}
-//             onClick={handleMenuClick}
-//           />
-//           <img
-//             alt="add"
-//             className="hide-icon"
-//             src={icons.activeAddIcon}
-//             onClick={handleAddClick}
-//           />
-//         </div>
-//       </div>
-//       {isOpen && folderList && folderList.length > 0 && (
-//         <div>
-//           {folderList.map((e, index) => (
-//             <Folder
-//               key={index}
-//               title={e.folder_name}
-//               docList={e.documents}
-//               onClickCreateDoc={onClickCreateDoc}
-//               onClickDocument={onClickDocument}
-//               activeItem={activeItem}
-//             />
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
+  const currentIcon = isHovered
+    ? isOpen
+      ? icons.activeTeam
+      : icons.activeRightArrow
+    : icons.teamspaceIcon;
+  return (
+    <div>
+      {/*Kebab Menu*/}
+      {showDropdown && (
+        <DropdownMenu
+          referenceElement={menuRef.current}
+          exceptionRef={menuRef}
+          options={dropdownOptions}
+          onClose={handleCloseMenu}
+        />
+      )}
+      {/*Invite Members*/}
+      <InviteMemebersPopUp
+        isVisible={isInviteMemberPopupVisible}
+        onClick={handleCloseMenu} //TODO
+        onClose={handleCloseInvitePopUp}
+      />
+      {/*Delete Option*/}
+      <DeletePopUp
+        isVisible={isDeletePopupVisible}
+        title="Delete Teamspace"
+        buttonText="Delete"
+        subtitle="You will lost you all folder and documents"
+        desc="Are you sure to delete team permanently?"
+        onClick={() => {}}
+        onClose={handleCloseDeletePopup}
+      />
+      {/*Rename*/}
+      {isRenameVisible && (
+        <RenamePopUp
+          title={title}
+          referenceElement={teamSpaceRef.current}
+          onClose={handleCloseRenamePopUp}
+          exceptionRef={teamSpaceRef}
+        />
+      )}
+      <CustomTooltip id={tooltipId} />
+      <div
+        data-tooltip-id={tooltipId}
+        data-tooltip-content={title}
+        className="show-row-space-between"
+        onClick={toggleOpen}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="teamspace-header">
+          <img alt="icon" src={currentIcon} />
+          <span
+            ref={teamSpaceRef}
+            className={`folder-title ${isHovered ? "active" : ""}`}
+          >
+            {title}
+          </span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          <img
+            className="hide-icon"
+            alt="menu"
+            ref={menuRef}
+            src={icons.activeMenuIcon}
+            onClick={handleMenuClick}
+          />
+          <img
+            alt="add"
+            className="hide-icon"
+            src={icons.activeAddIcon}
+            onClick={handleAddClick}
+          />
+        </div>
+      </div>
+      {isOpen && folderList && folderList.length > 0 && (
+        <div>
+          {folderList.map((e, index) => (
+            <Folder
+                    key={index}
+                    folderId={e.id}
+                    title={e.folderName}
+                    docList={e.documents}
+                    onClickCreateDoc={onClickCreateDoc}
+                    onClickDocument={onClickDocument}
+                    handleOpenFolderDeletePopup={() =>
+                      handleOpenFolderDeletePopup(e.id)
+                    }
+                    handleopendocumentdeletepopup={handleopendocumentdeletepopup}
+                    activeItem={activeItem}
+                  />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // export default TeamSpace;
 

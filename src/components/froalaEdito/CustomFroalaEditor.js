@@ -5,6 +5,7 @@ import "froala-editor/css/froala_editor.pkgd.min.css";
 import ChangeRequest from "./changeRequest.js";
 import SuggestionCardComponent from "./SuggestionCardComponent";
 import "./editor-style.css";
+import { useLocation, useParams } from "react-router-dom";
 import { apiService } from "../../services/apiService";
 import RecommendationSkeletonLoader from "../loading-screen/RecommendationSkeleton.js";
 import EditorSkeleton from "../loading-screen/EditorSkeleton.js";
@@ -21,31 +22,61 @@ const FunctionalEditor = () => {
   const [currentRecommendationIndex, setCurrentRecommendationIndex] =
     useState(0);
   const [activeRecommendation, setActiveRecommendation] = useState("");
+  const [recommendationData, setRecommendationData] = useState([]);
   const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
+  const location = useLocation();
+  const { id } = useParams();
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await apiService.getRecommendationForByte(36);
-      //TODO:  ADD DOCID FLOW HERE
-      setRequestData(response.data);
-      const url = response.data.documents[0].doc_content;
-      const htmlResponse = await fetch(
-        "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
-        { mode: "cors" }
-      ); //TODO : ADD URL
-      const htmlBlob = await htmlResponse.blob();
-      const htmlContent = await htmlBlob.text();
-      setActiveRecommendation(
-        response.data.documents[0].recommendations[0].previousText ||
-          "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."
-      );
-      setModel(htmlContent);
-      setIsLoading(false);
+    if (location.pathname.includes("document-edit")) {
       setShowChangeRequest(true);
+    } else if (location.pathname.includes("documents")) {
+      setShowChangeRequest(false);
+    }
+
+    const fetchData = async () => {
+      try {
+        let response;
+        if (location.pathname.includes("document-edit")) {
+          response = await apiService.getRecommendationForByte(61); //CHANGE IT
+          if (response) {
+            setRequestData(response.data);
+            const url = response.data.documents[0].doc_content;
+            const htmlResponse = await fetch(
+              "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
+              // url,
+              { mode: "cors" }
+            ); //TODO : ADD URL);
+            const htmlBlob = await htmlResponse.blob();
+            const htmlContent = await htmlBlob.text();
+            setRecommendationData(response.data.documents[0].recommendations);
+            setActiveRecommendation(
+              response.data.documents[0].recommendations[0].previousText
+            );
+            setModel(htmlContent);
+            setIsLoading(false);
+          }
+        } else if (location.pathname.includes("document") && id) {
+          response = await apiService.getRecommendationSingleDoc(id);
+          if (response) {
+            setRequestData(response);
+            const url = response.docContentUrl;
+            const htmlResponse = await fetch(url, { mode: "cors" });
+            const htmlBlob = await htmlResponse.blob();
+            const htmlContent = await htmlBlob.text();
+            setModel(htmlContent);
+            setRecommendationData(response.data.document.bytes);
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
+
     fetchData();
-  }, []);
+  }, [location, id]);
 
   //Handle size of change Request Header
   useEffect(() => {
@@ -64,15 +95,15 @@ const FunctionalEditor = () => {
     };
   }, [editorRef, model]);
 
-  // useEffect(() => {
-  //   if (requestData) {
-  //     changedModelRef.current = model;
-  //     placeCircles(
-  //       model,
-  //       requestData.documents[currentDocIndex].recommendations
-  //     );
-  //   }
-  // }, [model, currentDocIndex, requestData]);
+  useEffect(() => {
+    if (requestData) {
+      changedModelRef.current = model;
+      placeCircles(
+        model,
+        requestData.documents[currentDocIndex].recommendations
+      );
+    }
+  }, [model, currentDocIndex, requestData]);
 
   const handleModelChange = useCallback((newModel) => {
     setModel(newModel);
@@ -85,15 +116,10 @@ const FunctionalEditor = () => {
     const { recommendations } = requestData.documents[currentDocIndex];
     let updatedModel = model;
     const recommendation = recommendations[currentRecommendationIndex];
-    console.log("here in recom", recommendation);
     if (recommendation) {
-      const previousText =
-        recommendation.previous_text ||
-        "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."; // Example text
-
+      const previousText = recommendation.previous_text;
       const targetElement = findTextInElement(doc.body, previousText);
       if (targetElement) {
-        console.log("Target element", targetElement);
         const updatedContent = recommendation.change_request_text;
         const content = targetElement.textContent;
         updatedModel = updatedModel.replace(content, updatedContent);
@@ -119,21 +145,13 @@ const FunctionalEditor = () => {
 
   const highlightText = () => {
     if (!requestData) return;
-
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
-
-    const { recommendations } = requestData.documents[currentDocIndex];
     let updatedModel = model;
-
-    const recommendation = recommendations[currentRecommendationIndex];
-
+    const recommendation = recommendationData[currentRecommendationIndex];
     if (recommendation) {
-      const previousText =
-        recommendation.previous_text ||
-        "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt.";
+      const previousText = recommendation.previous_text;
       const targetElement = findTextInElement(doc.body, previousText);
-
       if (targetElement) {
         const content = targetElement.textContent;
         console.log("new content", content);
@@ -145,7 +163,7 @@ const FunctionalEditor = () => {
       }
     }
 
-    setModel(updatedModel); // Update the model with the highlighted text
+    setModel(updatedModel);
   };
 
   const addFloatingCircle = (x, y, index) => {
@@ -182,8 +200,9 @@ const FunctionalEditor = () => {
     highlightText();
   }, [activeRecommendation]);
 
+
+  
   const placeCircles = (docContent, recommendations) => {
-    // console.log("Place cirle");
     removeFloatingCircles();
     const tempDiv = document.createElement("div");
     tempDiv.style.position = "absolute";
@@ -196,12 +215,13 @@ const FunctionalEditor = () => {
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer) {
       recommendations.forEach((rec, index) => {
-        const previousText =
-          rec.previous_text ||
-          "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."; // Example text
+        const previousText = rec.previous_string;
+        
+        console.log("string to be matched",previousText);
         if (!previousText) return;
         const range = document.createRange();
         let elementFound = findTextInElement(tempDiv, previousText);
+        console.log(elementFound,"Here is element found");
         if (elementFound) {
           const startIndex = elementFound.textContent.indexOf(previousText);
           range.setStart(elementFound, startIndex);
@@ -214,9 +234,6 @@ const FunctionalEditor = () => {
           const rect = range.getBoundingClientRect();
           const x = editorRect.left;
           const y = editorRect.top + window.scrollY + changeRect.height;
-          // console.log(editorRect,"editorrect");
-          // console.log("rect",rect);
-          // console.log("Place cirle",x,y);
           addFloatingCircle(x, y, index + 1);
         } else {
         }
@@ -234,10 +251,14 @@ const FunctionalEditor = () => {
     }
   };
   const handleOpenResolveWarning = async () => {
-    //TODO: ADD CHECKING IS ALL RECOMMENDATION ACCEPTED OR NOT
-
-    setShowResolveWarning(true);
-    // handleCloseResolveWarning();
+    const status = await apiService.pendingRecommendation(
+      requestData.request_id
+    );
+    if (status) {
+      setShowResolveWarning(true);
+    } else {
+      handleResolveByte();
+    }
   };
 
   const handleCloseResolveWarning = () => {
@@ -246,6 +267,7 @@ const FunctionalEditor = () => {
 
   const handleResolveByte = async () => {
     await apiService.resolveByte(requestData.request_id);
+    handleCloseResolveWarning();
   };
   const handlePrevious = () => {
     if (currentRecommendationIndex > 0) {
@@ -257,9 +279,10 @@ const FunctionalEditor = () => {
       );
     }
     setActiveRecommendation(
-      "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."
+      requestData.documents[currentDocIndex].recommendations[
+        currentRecommendationIndex
+      ].previousText
     );
-    // setActiveRecommendation(requestData.documents[currentDocIndex].recommendations[currentRecommendationIndex].previousText);
     updateModel();
   };
 
@@ -272,10 +295,12 @@ const FunctionalEditor = () => {
       setCurrentDocIndex(currentDocIndex + 1);
       setCurrentRecommendationIndex(0);
     }
+
     setActiveRecommendation(
-      "We display an estimated tax at checkout which may be updated later when your order is completed. Finalized tax will be shown on your order receipt."
+      requestData.documents[currentDocIndex].recommendations[
+        currentRecommendationIndex
+      ].previousText
     );
-    // setActiveRecommendation(requestData.documents[currentDocIndex].recommendations[currentRecommendationIndex].previousText);
     updateModel();
   };
 
@@ -291,7 +316,7 @@ const FunctionalEditor = () => {
   };
 
   //LOADING
-  if (!requestData) {
+  if (isLoading) {
     return (
       <div id="editor" className="froala-editor-section">
         <div id="toolbar-container" className="toolbar-container"></div>
@@ -312,141 +337,143 @@ const FunctionalEditor = () => {
     );
   }
 
-  const totalRecommendations = requestData
-    ? requestData.documents.reduce(
-        (total, doc) => total + doc.recommendations.length,
-        0
-      )
-    : 0;
+  // const totalRecommendations = requestData
+  //   ? requestData.documents.reduce(
+  //       (total, doc) => total + doc.recommendations.length,
+  //       0
+  //     )
+  //   : 0;
 
-  // Extract date and time
-  const { date_time, request_text, sender } = requestData;
-  const date = new Date(date_time).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-  const time = new Date(date_time).toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // // Extract date and time
+  // const { date_time, request_text, sender } = requestData;
+  // const date = new Date(date_time).toLocaleDateString("en-GB", {
+  //   day: "2-digit",
+  //   month: "short",
+  //   year: "numeric",
+  // });
+  // const time = new Date(date_time).toLocaleTimeString("en-GB", {
+  //   hour: "2-digit",
+  //   minute: "2-digit",
+  // });
 
   return (
-    <div id="editor" className="froala-editor-section fade-in">
+    <div className="doc-editor">
       <ResolveChangeRequestPopUp
         isVisible={showResolveWarning}
-        onClickLButton={handleCloseResolveWarning}
-        onClickRButton={handleResolveByte}
+        onClickLButton={handleResolveByte}
+        onClickRButton={handleCloseResolveWarning}
         onClose={handleCloseResolveWarning}
         title="5 Open AiEdits" //change number
         subtitle="Do you still wish to resolve the Change Request ?"
         lButtonText="Resolve CR"
         rButtonText="View AiEdits"
       />
-      {/* Toolbar Container */}
-      <div id="toolbar-container" className="toolbar-container"></div>
-      <div className="editor-suggestion">
-        <div className="change-request">
-          {showChangeRequest && (
-            <ChangeRequest
-              onResolve={handleOpenResolveWarning}
-              width={editorWidth}
-              requester={sender}
-              date={date}
-              time={time}
-              message={request_text}
-              aiEdits={`${
-                currentRecommendationIndex + 1
-              }/${totalRecommendations}`}
-              onPrevious={handlePrevious}
-              onNext={handleNext}
-              onTap={handleOnTap}
-            />
-          )}
-
-          {isLoading ? (
-            <EditorSkeleton />
-          ) : (
-            // Froala Editor
-            <div ref={editorRef}>
-              <FroalaEditorComponent
-                tag="textarea"
-                model={model}
-                onModelChange={handleModelChange}
-                config={{
-                  toolbarSticky: true,
-                  editorClass: "froala-editor",
-                  spellcheck: true,
-                  attribution: false,
-                  heightMin: 200,
-                  heightMax: 800,
-                  placeholderText: "Edit your content here...",
-                  toolbarVisibleWithoutSelection: true,
-                  charCounterCount: true,
-                  toolbarContainer: "#toolbar-container",
-                  events: {
-                    initialized: function () {
-                      const secondToolbar =
-                        document.querySelector(".fr-second-toolbar");
-                      if (secondToolbar) {
-                        secondToolbar.remove();
-                      }
-                    },
-                    contentChanged: async function () {
-                      const updatedModel = this.html.get();
-                      placeCircles(
-                        updatedModel,
-                        requestData.documents[currentDocIndex].recommendations
-                      );
-                      const htmlBlob = new Blob([updatedModel], {
-                        type: "text/html",
-                      });
-                      const fileName = `document_29.html`; //replace number with docId
-                      const htmlFile = new File([htmlBlob], fileName, {
-                        type: "text/html",
-                        lastModified: new Date().getTime(),
-                      });
-                      await apiService.uploadDocument(htmlFile, "29", "5");
-                      changedModelRef.current = updatedModel;
-                    },
-                  },
-                }}
+      <div id="editor" className="froala-editor-section fade-in">
+        {/* Toolbar Container */}
+        <div id="toolbar-container" className="toolbar-container"></div>
+        <div className="editor-suggestion">
+          <div className="change-request">
+            {/* {showChangeRequest && (
+              <ChangeRequest
+                onResolve={handleOpenResolveWarning}
+                width={editorWidth}
+                requester={sender}
+                date={date}
+                time={time}
+                message={request_text}
+                aiEdits={`${
+                  currentRecommendationIndex + 1
+                }/${totalRecommendations}`}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onTap={handleOnTap}
               />
+            )} */}
+
+            {isLoading ? (
+              <EditorSkeleton />
+            ) : (
+              // Froala Editor
+              <div ref={editorRef}>
+                <FroalaEditorComponent
+                  tag="textarea"
+                  model={model}
+                  onModelChange={handleModelChange}
+                  config={{
+                    toolbarSticky: true,
+                    editorClass: "froala-editor",
+                    spellcheck: true,
+                    attribution: false,
+                    heightMin: 200,
+                    heightMax: 800,
+                    placeholderText: "Edit your content here...",
+                    toolbarVisibleWithoutSelection: true,
+                    charCounterCount: true,
+                    toolbarContainer: "#toolbar-container",
+                    events: {
+                      initialized: function () {
+                        const secondToolbar =
+                          document.querySelector(".fr-second-toolbar");
+                        if (secondToolbar) {
+                          secondToolbar.remove();
+                        }
+                      },
+                      contentChanged: async function () {
+                        const updatedModel = this.html.get();
+                        placeCircles(
+                          updatedModel,
+                          requestData.documents[currentDocIndex].recommendations
+                        );
+                        const htmlBlob = new Blob([updatedModel], {
+                          type: "text/html",
+                        });
+                        const fileName = `document_29.html`; //replace number with docId
+                        const htmlFile = new File([htmlBlob], fileName, {
+                          type: "text/html",
+                          lastModified: new Date().getTime(),
+                        });
+                        await apiService.uploadDocument(htmlFile, "29", "5");
+                        changedModelRef.current = updatedModel;
+                      },
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </div>
+          {isLoading ? (
+            <RecommendationSkeletonLoader count={4} />
+          ) : (
+            <div>
+              {recommendationData.map(
+                (recommendation, index) => (
+                  <SuggestionCardComponent
+                    isLoading={true}
+                    key={recommendation.id}
+                    num={index + 1}
+                    title={recommendation.change_request_type}
+                    content={recommendation.change_request_text}
+                    isActive={currentRecommendationIndex === index}
+                    onTapAccept={replaceText}
+                    onTapReject={() =>
+                      console.log(
+                        `Rejected recommendation ${
+                          currentRecommendationIndex === index
+                        }`
+                      )
+                    }
+                    onCoverTap={() => {
+                      setActiveRecommendation(
+                        recommendation.previousText || "Default"
+                      );
+                      setCurrentRecommendationIndex(index);
+                    }}
+                  />
+                )
+              )}
             </div>
           )}
         </div>
-        {isLoading ? (
-          <RecommendationSkeletonLoader count={4} />
-        ) : (
-          <div>
-            {requestData.documents[currentDocIndex].recommendations.map(
-              (recommendation, index) => (
-                <SuggestionCardComponent
-                  isLoading={true}
-                  key={recommendation.id}
-                  num={index + 1}
-                  title={recommendation.change_request_type}
-                  content={recommendation.change_request_text}
-                  isActive={currentRecommendationIndex === index}
-                  onTapAccept={replaceText}
-                  onTapReject={() =>
-                    console.log(
-                      `Rejected recommendation ${
-                        currentRecommendationIndex === index
-                      }`
-                    )
-                  }
-                  onCoverTap={() => {
-                    setActiveRecommendation(
-                      recommendation.previousText || "Default"
-                    );
-                    setCurrentRecommendationIndex(index);
-                  }}
-                />
-              )
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

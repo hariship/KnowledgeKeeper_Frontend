@@ -116,10 +116,16 @@ const AllRequests = () => {
       handleCloseDeleteDocPopUp();
     }
   };
+  
+const handleFeedback=async()=>{
+  await apiService.addByteFeedback(selectedByte);
+  handleResolveByte();
+}
+
+
   const handleResolveByte = async () => {
     console.log(selectedByte);
     await apiService.resolveByte(selectedByte);
-
     handleCloseZeroEditPopUp();
     getOpenRequests();
   };
@@ -247,7 +253,7 @@ const AllRequests = () => {
       />
       <ResolveChangeRequestPopUp
         isVisible={showZeroAIEditPopUp}
-        onClickLButton={handleResolveByte}
+        onClickLButton={handleFeedback}
         onClickRButton={handleResolveByte}
         onClose={handleCloseZeroEditPopUp}
         title="0 AI edits"

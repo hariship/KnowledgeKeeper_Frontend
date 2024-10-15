@@ -20,13 +20,14 @@ import SvgProfile from "../../icons/Profile";
 import SvgDropdown from "../../icons/Dropdown";
 import SvgCloseSidebar from "../../icons/CloseSidebar";
 import SvgLogOut from "../../icons/LogOut";
+// import TeamSpace from "./Folder";
 
 const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [isCreateFolderPopupVisible, setIsCreateFolderPopupVisible] =
     useState(false);
   const [isCreateDocPopupVisible, setIsCreateDocPopupVisible] = useState(false);
-  // const [isCreateTeamSpacePopupVisible, setIsCreateTeamSpacePopupVisible] =
-  //   useState(false);
+  const [isCreateTeamSpacePopupVisible, setIsCreateTeamSpacePopupVisible] =
+    useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const navigate = useNavigate();
   const [isLogoutPopupVisible, setisLogoutPopVisible] = useState(false);
@@ -103,7 +104,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
 
   const handleDocumentClick = (id) => {
-    navigate(`document-edit/${id}`);
+    navigate(`document/${id}`);
   };
 
   useEffect(() => {
@@ -220,12 +221,16 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
               <div>
                 {projectList.map((e, index) => (
                   // <TeamSpace
-                  // key={index}
+                  //   key={index}
                   //   title={e.team_name}
                   //   folderList={e.folder_list}
                   //   onClickCreateFolder={handleCreateFolderClick}
                   //   onClickCreateDoc={handleCreateDocClick}
                   //   onClickDocument={handleDocumentClick}
+                  //   handleOpenFolderDeletePopup={() =>
+                  //     handleOpenFolderDeletePopup(e.id)
+                  //   }
+                  //   handleopendocumentdeletepopup={handleOpenDocDeletePopup}
                   //   activeItem={activeItem}
                   // />
                   <Folder
@@ -290,6 +295,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
       /> */}
       {/*Folder Pop up*/}
       <CreateFolderPopUp
+        selectedId={selectedId}
         title="Create Folder"
         subtitle="Folders will keep your documents organised"
         label="Folder Name"
@@ -301,6 +307,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
       />
       {/*Document Pop up*/}
       <CreateFolderPopUp
+        selectedId={selectedId}
         title="Create Document"
         subtitle="Document will keep your data organised"
         label="Document Name"

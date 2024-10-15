@@ -14,15 +14,15 @@ const HomePage = () => {
   const [activeItem, setActiveItem] = useState("All Requests");
   const [isTeamspaceOpen, setIsTeamspaceOpen] = useState(false);
   const location = useLocation();
-const navigate=useNavigate();
+  const navigate = useNavigate();
   useEffect(() => {
-    const token = sessionStorage.getItem('authToken');
+    const token = sessionStorage.getItem("authToken");
     if (token) {
       console.log(token);
-      setIsLoggedIn(true); 
+      setIsLoggedIn(true);
     } else {
       console.log("here in else");
-      navigate("/")
+      navigate("/");
     }
     const path = location.pathname;
     if (path.includes("all-requests")) {
@@ -31,27 +31,31 @@ const navigate=useNavigate();
       setActiveItem("Trash");
     } else if (path.includes("integration")) {
       setActiveItem("Integration");
-    } else if (path.includes("document-edit")) {
-      setIsTeamspaceOpen(true)
-      const id = path.split("/").pop(); 
-      console.log(id,"This is the id from route")
-      setActiveItem(id); 
+    } else if (path.includes("document-edit") || path.includes("document")) {
+      setIsTeamspaceOpen(true);
+      const id = path.split("/").pop();
+      setActiveItem(id);
     } else if (path.includes("feedback")) {
       setActiveItem("Feedback");
     } else {
       setActiveItem("");
     }
-  }, [location,setIsLoggedIn,navigate]);
+  }, [location, setIsLoggedIn, navigate]);
 
   return (
     <div className="home">
-      <Sidebar activeItem={activeItem} isTeamspaceOpen={isTeamspaceOpen} setIsTeamspaceOpen={setIsTeamspaceOpen}/>
+      <Sidebar
+        activeItem={activeItem}
+        isTeamspaceOpen={isTeamspaceOpen}
+        setIsTeamspaceOpen={setIsTeamspaceOpen}
+      />
       <div className="content">
         <Routes>
           <Route path="all-requests" element={<AllRequests />} />
           <Route path="trash" element={<TrashPage />} />
           <Route path="integration" element={<IntegrationPage />} />
           <Route path="document-edit/:id" element={<FunctionalEditor />} />
+          <Route path="document/:id" element={<FunctionalEditor />} />
         </Routes>
       </div>
     </div>

@@ -186,7 +186,6 @@ class ApiService {
       });
 
       if (response.data.status) {
-        console.log("Document uploaded successfully", response.data);
         return response.data;
       } else {
         throw new Error("Failed to upload document");
@@ -415,12 +414,12 @@ class ApiService {
   async getRecommendationSingleDoc(docId) {
     try {
       const response = await axios.get(
-        ENDPOINTS.GET_RECOMMENDATION_SINGLE_DOC(docId),
+        ENDPOINTS.GET_RECOMMENDATION_FOR_DOC(docId),
         {
           headers: getHeaders(true),
         }
       );
-      console.log("Response:", response.data);
+      console.log("Response: for fetch single doc", response);
       return response.data;
     } catch (error) {
       console.error("Error Response:", error);
@@ -428,6 +427,44 @@ class ApiService {
         error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD
       );
       return error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD;
+    }
+  }
+
+  //ADD FEEDBACK FOR BYTE
+  async addByteFeedback(byteId) {
+    try {
+      const requestBody = { feedback: "AI is wrong" };
+      const response = await axios.post(
+        ENDPOINTS.FEEDBACK_BYTE(byteId),
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      return response.data.isUnique;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+
+  //CHECK PENDING RECOMMENDATION FOR BYTE
+  async pendingRecommendation(byteId) {
+    try {
+      const response = await axios.get(
+        ENDPOINTS.CHECK_BYTE_PENDING_RECOM(byteId),
+        {
+          headers: getHeaders(true),
+        }
+      );
+      return response.data.pending;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
     }
   }
 
@@ -460,6 +497,46 @@ class ApiService {
       });
       console.log(response.data);
       return response.data;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+
+  //CHECK FOLDER EXIST
+  async isFolderExist(folderName) {
+    try {
+      const requestBody = { folderName };
+      const response = await axios.post(
+        ENDPOINTS.CHECK_FOLDER_EXIST,
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      return response.data.isUnique;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+
+  //CHECK DOCUMENT EXIST
+  async isDocumentExist(documentName, folderId) {
+    try {
+      const requestBody = { documentName };
+      const response = await axios.post(
+        ENDPOINTS.CHECK_DOCUMENT_EXIST(folderId),
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      return response.data.isUnique;
     } catch (error) {
       toast.error(
         error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG

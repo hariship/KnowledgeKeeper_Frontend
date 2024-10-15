@@ -13,10 +13,12 @@ export const ENDPOINTS = {
   CREATE_FOLDER: `${API_BASE_URL}clients/${CLIENT_ID}/folders`,
   CREATE_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
   GET_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
-GET_TRASH: `${API_BASE_URL}clients/${CLIENT_ID}/bytes/trash`,
+  CHECK_FOLDER_EXIST:(teamspaceId)=> `${API_BASE_URL}clients/${CLIENT_ID}/teamspaces/${teamspaceId}/folders/unique`,
+  GET_TRASH: `${API_BASE_URL}clients/${CLIENT_ID}/bytes/trash`,
   GET_RECOMMENDATION_SINGLE_BYTE: (byteId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/recommendations`,
-  GET_RECOMMENDATION_SINGLE_DOC: (docId) =>
+
+  GET_RECOMMENDATION_FOR_DOC: (docId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}recommendations`,
   RENAME_OR_DELETE_FOLDER: (folderId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}`,
@@ -25,4 +27,10 @@ GET_TRASH: `${API_BASE_URL}clients/${CLIENT_ID}/bytes/trash`,
     `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}`,
   RESOLVE_BYTE: (byteId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/resolve-or-closed`,
+  FEEDBACK_BYTE: (byteId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/byte/${byteId}/feedback`,
+  CHECK_BYTE_PENDING_RECOM: (byteId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/byte/${byteId}/is-pending`,
+  CHECK_DOCUMENT_EXIST: (folderId) =>
+    `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}/documents/unique`,
 };

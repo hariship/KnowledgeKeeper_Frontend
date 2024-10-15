@@ -8,7 +8,6 @@ const RecommendationSkeletonLoader = ({ count }) => {
     <div className="skeleton-container-recom">
       {skeletons.map((_, index) => (
         <div className="suggestion-skeleton-container">
-         
           <div key={index} className="skeleton-item-recom">
             <div className="skeleton-title-loader"></div>
             <div className="skeleton-content-loader"></div>

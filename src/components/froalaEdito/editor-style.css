@@ -19,6 +19,10 @@
 }
 
 /********************************************************FROALA TEXT EDITOR********************************************/
+.doc-editor{
+  flex-grow: 1;
+}
+
 .froala-editor-section {
   position: relative;
   height: 100vh;
@@ -189,6 +193,7 @@
 }
 
 .read-more-toggle {
+  margin-left: 5px;
   font-size: var(--fourteen-font-size);
   cursor: pointer;
   color: var(--textColor);

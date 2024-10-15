@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import "./popup-style.css";
 import HeaderSubHeadingComponent from "./CustomComponets";
 import SvgCloseCross from "../../icons/CloseCross";
+import { apiService } from "../../services/apiService";
 
 const CreateFolderPopUp = ({
+  selectedId,
   isVisible,
   title,
   subtitle,
@@ -13,25 +15,53 @@ const CreateFolderPopUp = ({
   onClose,
   onClick,
 }) => {
+  const [warningMessage, setWarningMessage] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
   if (!isVisible) return null;
   const handleInputChange = (e) => {
     setInput(e.target.value);
+    setWarningMessage("");
   };
 
   const handleClosePopUp = () => {
     setInput("");
     setLoading(false);
+    setWarningMessage("");
     onClose();
   };
 
   const handleButtonClick = async () => {
     setLoading(true);
-    await onClick(input);
+    const nameExists = await handleNameExist();
+    if (!nameExists) {
+      setLoading(false);
+      return;
+    }
+  
+    await onClick(input); 
     setInput("");
     setLoading(false);
   };
+  
+
+  const handleNameExist = async () => {
+    let isExist = false;
+
+    if (title === "Create Folder") {
+      isExist = await apiService.isFolderExist(input,selectedId);
+    } else if (title === "Create Document") {
+      isExist = await apiService.isDocumentExist(input,selectedId);
+    }
+
+    if (isExist) {
+      setWarningMessage(`*${input} name already exists. Please choose a different name.*`);
+      return false; 
+    }
+
+    return true; 
+  };
+
 
   return (
     <div
@@ -51,15 +81,22 @@ const CreateFolderPopUp = ({
               placeholder={labelText}
               maxLength={100}
               onChange={handleInputChange}
-            />
-          </label>
+            /> {warningMessage && (
+              <div className="warning-text">
+                {warningMessage}
+              </div>
+            )}
+          </label> 
         </div>
         <button
-          className={`popup-button ${input.trim()|| !loading? "" : "disabled-button"}`}
+          className={`popup-button ${
+            input.trim() || !loading ? "" : "disabled-button"
+          }`}
           onClick={handleButtonClick}
           disabled={!input.trim() || loading}
         >
-          {buttonText} {loading && (
+          {buttonText}
+          {loading && (
             <span className="loader" style={{ marginLeft: "8px" }}></span>
           )}
         </button>
