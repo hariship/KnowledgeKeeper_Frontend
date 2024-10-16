@@ -400,7 +400,7 @@ class ApiService {
         headers: getHeaders(true),
       });
       console.log("Response:", response.data);
-      return response.data.client.folders;
+      return response.data.client.teamspaces;
     } catch (error) {
       console.error("Error Response:", error);
       toast.error(
@@ -487,12 +487,11 @@ class ApiService {
       return error.response?.data.message || MESSAGES.ERRORS.UNABLE_TO_LOAD;
     }
   }
-
-  //CREATE FOLDER
-  async createFolder(folderName) {
+  //CREATE Teamspace
+  async createTeamspace(teamspaceName) {
     try {
-      const requestBody = { folderName };
-      const response = await axios.post(ENDPOINTS.CREATE_FOLDER, requestBody, {
+      const requestBody = { teamspaceName };
+      const response = await axios.post(ENDPOINTS.CREATE_TEAMSPACE, requestBody, {
         headers: getHeaders(true),
       });
       console.log(response.data);
@@ -505,12 +504,32 @@ class ApiService {
     }
   }
 
-  //CHECK FOLDER EXIST
-  async isFolderExist(folderName) {
+  //CREATE TEAMSPACE
+  async createFolder(folderName, teamspaceId) {
     try {
-      const requestBody = { folderName };
+      const requestBody = { folderName, teamspaceId };
       const response = await axios.post(
-        ENDPOINTS.CHECK_FOLDER_EXIST,
+        ENDPOINTS.CREATE_FOLDER,
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+  //CHECK TEAMSPACE EXIST
+  async isTeamspaceExist(teamspaceName) {
+    try {
+      const requestBody = { teamspaceName };
+      const response = await axios.post(
+        ENDPOINTS.CHECK_TEAMSPACE_EXIST,
         requestBody,
         {
           headers: getHeaders(true),
@@ -525,6 +544,48 @@ class ApiService {
     }
   }
 
+  //CHECK FOLDER EXIST
+  async isFolderExist(folderName, teamspaceId) {
+    try {
+      const requestBody = { folderName };
+      const response = await axios.post(
+        ENDPOINTS.CHECK_FOLDER_EXIST(teamspaceId),
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      console.log(response);
+      return response.data.isUnique;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+ //INVITE TEAMMEMBERS
+ async inviteMembers(email, teamspaceId) {
+  try {
+
+    const requestBody = {userId, email };
+    const response = await axios.post(
+      ENDPOINTS.INVITE_MEMBERS(teamspaceId),
+      requestBody,
+      {
+        headers: getHeaders(true),
+      }
+    );
+    console.log(response);
+    toast.success(response.data.message);
+    return response.data.isUnique;
+  } catch (error) {
+    toast.error(
+      error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+    );
+    throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+  }
+}
   //CHECK DOCUMENT EXIST
   async isDocumentExist(documentName, folderId) {
     try {
@@ -536,12 +597,52 @@ class ApiService {
           headers: getHeaders(true),
         }
       );
+      console.log(response);
       return response.data.isUnique;
     } catch (error) {
       toast.error(
         error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
       );
       throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+
+  //RENAME TEAMSPACE
+  async renameTeamspace(teamspaceName, teamspaceId) {
+    try {
+      const requestBody = { teamspaceName };
+      const response = await axios.put(
+        ENDPOINTS.RENAME_OR_DELETE_TEAMSPACE(teamspaceId),
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      toast.error(
+        error.response?.error || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
+  }
+
+  //Delete Teamspace
+  async deleteTeamspace(teamspaceId) {
+    try {
+      const response = await axios.delete(
+        ENDPOINTS.RENAME_OR_DELETE_TEAMSPACE(teamspaceId),
+        {
+          headers: getHeaders(true),
+        }
+      );
+      toast.success(response.data.message);
+      return response.data;
+    } catch (error) {
+      toast.error(
+        error.response?.error || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
     }
   }
 

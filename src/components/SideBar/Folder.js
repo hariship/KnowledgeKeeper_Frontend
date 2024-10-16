@@ -4,7 +4,6 @@ import "./sidebar-style.css";
 import icons from "../../assets/icons";
 import DropdownMenu from "../PopUps/DropDown";
 import RenamePopUp from "../PopUps/RenamePopUp";
-import InviteMemebersPopUp from "../PopUps/InviteMembersPopUp";
 import CustomTooltip from "../PopUps/CustomToolTip";
 import { apiService } from "../../services/apiService";
 import SvgAddIcon from "../../icons/AddIcon";
@@ -15,35 +14,37 @@ import SvgDocumentIcon from "../../icons/DocumentIcon";
 import SvgActiveFolder from "../../icons/ActiveFolder";
 import SvgActiveRightArrow from "../../icons/ActiveRightArrow";
 import SvgFolderIcon from "../../icons/FolderIcon";
-import DeletePopUp from "../PopUps/DeletePopUp";
+import SvgAddMember from "../../icons/AddMember";
+import SvgActiveTeam from "../../icons/ActiveTeam";
+import SvgTeamspace from "../../icons/Teamspace";
 
 const TeamSpace = ({
+  teamspaceId,
   title,
-  folderList,
+  folderList = [],
   onClickCreateFolder,
   onClickCreateDoc,
   onClickDocument,
   handleOpenFolderDeletePopup,
   handleopendocumentdeletepopup,
+  handleOpenDeleteTeamspacePopup,
+  handleOpenInvitePopUp,
   activeItem,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isDeletePopupVisible, setIsDeletePopupVisible] = useState(false);
   const [isRenameVisible, setIsRenameVisible] = useState(false);
-  const [isInviteMemberPopupVisible, setIsInviteMemberPopUpVisible] =
-    useState(false);
+  const [teamSpaceTitle, setTitle] = useState(title);
+
   const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => setIsHovered(false);
   const teamSpaceRef = useRef(null);
   const menuRef = useRef(null);
   const tooltipId = "teamspace-tooltip";
-
-  // Check if any folder in the team contains the active item
   useEffect(() => {
     const isActiveInTeam = folderList.some((folder) =>
-      folder.documents.some((doc) => doc.doc_id === activeItem)
+      folder.documents.some((doc) => doc.id === activeItem)
     );
     if (isActiveInTeam) setIsOpen(true);
   }, [activeItem, folderList]);
@@ -52,6 +53,15 @@ const TeamSpace = ({
     if (folderList && folderList.length > 0) {
       setIsOpen(!isOpen);
     }
+  };
+
+  const handleDeleteOpenPopup = () => {
+    handleCloseMenu();
+    handleOpenDeleteTeamspacePopup();
+  };
+  const handleInviteOpenPopup = () => {
+    handleCloseMenu();
+    handleOpenInvitePopUp();
   };
 
   const handleCloseMenu = () => {
@@ -63,58 +73,48 @@ const TeamSpace = ({
     setShowDropdown((prevShowDropdown) => !prevShowDropdown);
   };
 
-  const handleAddClick = (e) => {
-    e.stopPropagation();
+  const handleAddClick = () => {
     onClickCreateFolder();
   };
 
-  const handleOpenDeletePopup = () => {
-    setIsDeletePopupVisible(true);
+  const handleUpdateRename = async () => {
+    await apiService.renameTeamspace(teamSpaceTitle, teamspaceId);
   };
 
-  const handleCloseDeletePopup = () => {
-    setIsDeletePopupVisible(false);
-  };
   const handleOpenRenamePopUp = () => {
     handleCloseMenu();
     setIsRenameVisible(true);
   };
 
   const handleCloseRenamePopUp = () => {
+    handleUpdateRename();
     setIsRenameVisible(false);
-  };
-
-  const handleOpenInvitePopUp = () => {
-    setIsInviteMemberPopUpVisible(true);
-  };
-
-  const handleCloseInvitePopUp = () => {
-    setIsInviteMemberPopUpVisible(false);
   };
 
   const dropdownOptions = [
     {
       label: "Invite Teammates",
-      icon: icons.inviteMemberIcon,
-      onClick: handleOpenInvitePopUp,
+      icon: SvgAddMember,
+      onClick: handleInviteOpenPopup,
     },
     {
       label: "Rename",
-      icon: icons.renameIcon,
+      icon: SvgRename,
       onClick: handleOpenRenamePopUp,
     },
     {
       label: "Delete",
-      icon: icons.trashIcon,
-      onClick: handleOpenDeletePopup,
+      icon: SvgTrash,
+      onClick: handleDeleteOpenPopup,
     },
   ];
 
-  const currentIcon = isHovered
+  const CurrentIcon = isHovered
     ? isOpen
-      ? icons.activeTeam
-      : icons.activeRightArrow
-    : icons.teamspaceIcon;
+      ? SvgActiveTeam
+      : SvgActiveRightArrow
+    : SvgTeamspace;
+
   return (
     <div>
       {/*Kebab Menu*/}
@@ -126,26 +126,12 @@ const TeamSpace = ({
           onClose={handleCloseMenu}
         />
       )}
-      {/*Invite Members*/}
-      <InviteMemebersPopUp
-        isVisible={isInviteMemberPopupVisible}
-        onClick={handleCloseMenu} //TODO
-        onClose={handleCloseInvitePopUp}
-      />
-      {/*Delete Option*/}
-      <DeletePopUp
-        isVisible={isDeletePopupVisible}
-        title="Delete Teamspace"
-        buttonText="Delete"
-        subtitle="You will lost you all folder and documents"
-        desc="Are you sure to delete team permanently?"
-        onClick={() => {}}
-        onClose={handleCloseDeletePopup}
-      />
+
       {/*Rename*/}
       {isRenameVisible && (
         <RenamePopUp
-          title={title}
+          title={teamSpaceTitle}
+          setTitle={setTitle}
           referenceElement={teamSpaceRef.current}
           onClose={handleCloseRenamePopUp}
           exceptionRef={teamSpaceRef}
@@ -161,12 +147,12 @@ const TeamSpace = ({
         onMouseLeave={handleMouseLeave}
       >
         <div className="teamspace-header">
-          <img alt="icon" src={currentIcon} />
+          <CurrentIcon className="default-img-icon" />
           <span
             ref={teamSpaceRef}
             className={`folder-title ${isHovered ? "active" : ""}`}
           >
-            {title}
+            {teamSpaceTitle}
           </span>
         </div>
         <div style={{ display: "flex", flexDirection: "row" }}>
@@ -177,30 +163,25 @@ const TeamSpace = ({
             src={icons.activeMenuIcon}
             onClick={handleMenuClick}
           />
-          <img
-            alt="add"
-            className="hide-icon"
-            src={icons.activeAddIcon}
-            onClick={handleAddClick}
-          />
+          <SvgAddIcon className="hide-icon" onClick={handleAddClick} />
         </div>
       </div>
       {isOpen && folderList && folderList.length > 0 && (
         <div>
           {folderList.map((e, index) => (
             <Folder
-                    key={index}
-                    folderId={e.id}
-                    title={e.folderName}
-                    docList={e.documents}
-                    onClickCreateDoc={onClickCreateDoc}
-                    onClickDocument={onClickDocument}
-                    handleOpenFolderDeletePopup={() =>
-                      handleOpenFolderDeletePopup(e.id)
-                    }
-                    handleopendocumentdeletepopup={handleopendocumentdeletepopup}
-                    activeItem={activeItem}
-                  />
+              key={index}
+              folderId={e.id}
+              title={e.folderName}
+              docList={e.documents}
+              onClickCreateDoc={onClickCreateDoc}
+              onClickDocument={onClickDocument}
+              handleOpenFolderDeletePopup={() =>
+                handleOpenFolderDeletePopup(e.id)
+              }
+              handleopendocumentdeletepopup={handleopendocumentdeletepopup}
+              activeItem={activeItem}
+            />
           ))}
         </div>
       )}
@@ -208,7 +189,7 @@ const TeamSpace = ({
   );
 };
 
-// export default TeamSpace;
+export default TeamSpace;
 
 /************************************************ FOLDER ***************************************/
 
@@ -234,7 +215,6 @@ const Folder = ({
     const isActiveInFolder = docList.some(
       (doc) => String(doc.id) === String(activeItem)
     );
-    console.log("Here is Active Item inside folder",activeItem);
     if (isActiveInFolder) setIsOpen(true);
   }, [activeItem, docList]);
   const toggleOpen = () => {
@@ -264,7 +244,7 @@ const Folder = ({
 
   const handleAddDocClick = (e) => {
     e.stopPropagation();
-    onClickCreateDoc();
+    onClickCreateDoc(folderId);
   };
   const handleOpenDeletePopup = () => {
     handleCloseMenu();
@@ -309,7 +289,6 @@ const Folder = ({
       >
         <div className="folder-header">
           <CurrentIcon className="default-img-icon" />
-          {/* <img alt="folder" src={currentIcon} /> */}
           <span
             ref={titleRef}
             className={`folder-title ${isHovered ? "active" : ""}`}
@@ -363,7 +342,7 @@ const Folder = ({
   );
 };
 
-export default Folder;
+// export default Folder;
 
 /**********************************************DOCUMENT************************************8*/
 
@@ -397,7 +376,6 @@ const Document = ({
   const handleMouseLeave = () => {
     setIsHovered(false);
   };
-
 
   const handleMenuClick = (e) => {
     e.stopPropagation();

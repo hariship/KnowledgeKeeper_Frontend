@@ -9,7 +9,6 @@ const ChangeRequest = ({
   width = 300, 
   requester = "Missing element", 
   date = "N/A",
-  time = "N/A",
   message = "No message available", 
   aiEdits = "0",
   onPrevious = () => {},
@@ -22,7 +21,15 @@ const ChangeRequest = ({
   const [shouldShowReadMore, setShouldShowReadMore] = useState(false);
   const changeRequestRef = useRef(null);
   const redContainerRef = useRef(null);
-
+  const byteDate = new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = new Date(date).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const handleToggle = () => setIsExpanded(!isExpanded);
 
   const updateHeight = () => {
@@ -108,7 +115,7 @@ const ChangeRequest = ({
               <span>{requester}</span>
               <span>|</span>
               <span>
-                {date} {time}
+                {byteDate} {time}
               </span>
             </div>
           </div>

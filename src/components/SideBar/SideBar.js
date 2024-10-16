@@ -9,7 +9,7 @@ import DeletePopUp from "../PopUps/DeletePopUp";
 import CustomTooltip from "../PopUps/CustomToolTip";
 import SvgOpenSidebar from "../../icons/OpenSidebar";
 import { apiService } from "../../services/apiService";
-import Folder from "./Folder";
+import InviteMemebersPopUp from "../PopUps/InviteMembersPopUp";
 import SvgKkLogo from "../../icons/KkLogo";
 import SvgAddIcon from "../../icons/AddIcon";
 import SvgIntergration from "../../icons/Intergration";
@@ -20,13 +20,15 @@ import SvgProfile from "../../icons/Profile";
 import SvgDropdown from "../../icons/Dropdown";
 import SvgCloseSidebar from "../../icons/CloseSidebar";
 import SvgLogOut from "../../icons/LogOut";
-// import TeamSpace from "./Folder";
+import TeamSpace from "./Folder";
 
 const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [isCreateFolderPopupVisible, setIsCreateFolderPopupVisible] =
     useState(false);
   const [isCreateDocPopupVisible, setIsCreateDocPopupVisible] = useState(false);
   const [isCreateTeamSpacePopupVisible, setIsCreateTeamSpacePopupVisible] =
+    useState(false);
+  const [isDeleteTeamSpacePopupVisible, setIsDeleteTeamSpacePopupVisible] =
     useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const navigate = useNavigate();
@@ -39,11 +41,14 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     useState(false);
   const [isDocDeletePopupVisible, setIsDocDeletePopupVisible] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
-
+  const [isInviteMemberPopupVisible, setIsInviteMemberPopUpVisible] =
+    useState(false);
   const [projectList, setProjectList] = useState([]);
   useEffect(() => {
     getClientDetails();
   }, [
+    isDeleteTeamSpacePopupVisible,
+    isCreateTeamSpacePopupVisible,
     isDocDeletePopupVisible,
     isCreateFolderPopupVisible,
     isFolderDeletePopupVisible,
@@ -75,14 +80,35 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     setIsDropdownVisible((prevState) => !prevState);
   };
 
+  const handleOpenInvitePopUp = () => {
+    setIsInviteMemberPopUpVisible(true);
+  };
+  const handleCloseMenu = () => {
+    handleCloseInvitePopUp();
+  };
+
+  const handleCloseInvitePopUp = () => {
+    setIsInviteMemberPopUpVisible(false);
+  };
   //CREATE
-  const handleCreateFolderClick = async (e) => {
+  const handleCreateTeamspaceClick = (e) => {
     e.stopPropagation();
+    setIsCreateTeamSpacePopupVisible(true);
+  };
+
+  const handleCreateTeamspace = async (teamspaceName) => {
+    await apiService.createTeamspace(teamspaceName);
+    handleCloseTeamspacePopup();
+  };
+
+  const handleCreateFolderClick = (teamspaceId) => {
+    setSelectedId(teamspaceId);
+    console.log("here is selectedId", teamspaceId);
     setIsCreateFolderPopupVisible(true);
   };
 
   const handleCreateFolder = async (folderName) => {
-    await apiService.createFolder(folderName);
+    await apiService.createFolder(folderName, selectedId);
     handleCloseFolderPopup();
   };
 
@@ -91,6 +117,9 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     handleCloseDocPopup();
   };
 
+  const handleCloseTeamspacePopup = () => {
+    setIsCreateTeamSpacePopupVisible(false);
+  };
   const handleCloseFolderPopup = () => {
     setIsCreateFolderPopupVisible(false);
   };
@@ -129,11 +158,23 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
       onClick: handleOpenLogoutPopUp,
     },
   ];
+  const handleOpenTeamspaceDeletePopup = (teamspaceId) => {
+    setSelectedId(teamspaceId);
+    setIsDeleteTeamSpacePopupVisible(true);
+  };
+
+  const handleDeleteTeamspace = async () => {
+    await apiService.deleteTeamspace(selectedId);
+    handleCloseTeamspaceDeletePopup();
+  };
+  const handleCloseTeamspaceDeletePopup = () => {
+    setIsDeleteTeamSpacePopupVisible(false);
+  };
+
   const handleOpenFolderDeletePopup = (folderId) => {
     setSelectedId(folderId);
     setIsFolderDeletePopupVisible(true);
   };
-
   const handleDeleteFolder = async () => {
     await apiService.deleteFolder(selectedId);
     handleCloseFolderDeletePopup();
@@ -213,37 +254,29 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
             </div>
             <SvgAddIcon
               className="hide-icon"
-              onClick={handleCreateFolderClick}
+              onClick={handleCreateTeamspaceClick}
             />
           </div>
           <div className="document-container" ref={documentContainerRef}>
             {isTeamspaceOpen && projectList && projectList.length > 0 && (
               <div>
                 {projectList.map((e, index) => (
-                  // <TeamSpace
-                  //   key={index}
-                  //   title={e.team_name}
-                  //   folderList={e.folder_list}
-                  //   onClickCreateFolder={handleCreateFolderClick}
-                  //   onClickCreateDoc={handleCreateDocClick}
-                  //   onClickDocument={handleDocumentClick}
-                  //   handleOpenFolderDeletePopup={() =>
-                  //     handleOpenFolderDeletePopup(e.id)
-                  //   }
-                  //   handleopendocumentdeletepopup={handleOpenDocDeletePopup}
-                  //   activeItem={activeItem}
-                  // />
-                  <Folder
+                  <TeamSpace
                     key={index}
-                    folderId={e.id}
-                    title={e.folderName}
-                    docList={e.documents}
-                    onClickCreateDoc={() => handleCreateDocClick(e.id)}
+                    teamspaceId={e.id}
+                    title={e.teamspaceName}
+                    folderList={e.folder}
+                    onClickCreateFolder={() => {
+                      handleCreateFolderClick(e.id);
+                    }}
+                    handleOpenInvitePopUp={handleOpenInvitePopUp}
+                    onClickCreateDoc={handleCreateDocClick}
                     onClickDocument={handleDocumentClick}
-                    handleOpenFolderDeletePopup={() =>
-                      handleOpenFolderDeletePopup(e.id)
-                    }
+                    handleOpenFolderDeletePopup={handleOpenFolderDeletePopup}
                     handleopendocumentdeletepopup={handleOpenDocDeletePopup}
+                    handleOpenDeleteTeamspacePopup={() => {
+                      handleOpenTeamspaceDeletePopup(e.id);
+                    }}
                     activeItem={activeItem}
                   />
                 ))}
@@ -283,16 +316,24 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
           <SvgOpenSidebar className="sidebar-icon" />
         </button>
       )}
-      ;{/*TeamSpace Pop up*/}
-      {/* <CreateFolderPopUp
+      ;{/*Invite Members*/}
+      <InviteMemebersPopUp
+        isVisible={isInviteMemberPopupVisible}
+        teamspaceId={selectedId}
+        onClose={handleCloseInvitePopUp}
+      />
+      {/*TeamSpace Pop up*/}
+      <CreateFolderPopUp
+        selectedId={selectedId}
         title="New teamspace"
         subtitle="Teamspaces are where your team organizes pages, permissions, and members"
         label="Name of your teamspace"
         labelText="Enter Name"
         buttonText="Create Teamspace"
         isVisible={isCreateTeamSpacePopupVisible}
-        onClose={handleCloseTeamSpacePopup}
-      /> */}
+        onClick={handleCreateTeamspace}
+        onClose={handleCloseTeamspacePopup}
+      />
       {/*Folder Pop up*/}
       <CreateFolderPopUp
         selectedId={selectedId}
@@ -316,6 +357,16 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
         isVisible={isCreateDocPopupVisible}
         onClose={handleCloseDocPopup}
         onClick={(e) => handleCreateDocument(selectedId, e)}
+      />
+      {/*Delete Teamspace*/}
+      <DeletePopUp
+        isVisible={isDeleteTeamSpacePopupVisible}
+        title="Delete Teamspace"
+        buttonText="Delete"
+        subtitle="You will lost you all folder and documents"
+        desc="Are you sure to delete team permanently?"
+        onClick={handleDeleteTeamspace}
+        onClose={handleCloseTeamspaceDeletePopup}
       />
       {/*Delete Folder*/}
       <DeletePopUp

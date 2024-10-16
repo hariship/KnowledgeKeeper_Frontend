@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import "./popup-style.css";
 import icons from "../../assets/icons";
 import HeaderSubHeadingComponent from "./CustomComponets";
+import { apiService } from "../../services/apiService";
 
-const InviteMembersPopUp = ({ isVisible, onClose, onClick }) => {
+const InviteMembersPopUp = ({ isVisible, onClose, teamspaceId }) => {
   const [emails, setEmails] = useState([]);
   const [inputValue, setInputValue] = useState("");
 
@@ -23,8 +24,14 @@ const InviteMembersPopUp = ({ isVisible, onClose, onClick }) => {
     return emailRegex.test(email);
   };
 
+  const handleInviteMembers = async () => {
+    console.log(emails);
+    await apiService.inviteMembers(emails, teamspaceId);
+    onClose();
+  };
+
   const removeEmail = (emailToRemove) => {
-    setEmails(emails.filter(email => email !== emailToRemove));
+    setEmails(emails.filter((email) => email !== emailToRemove));
   };
 
   const handleClearAndClose = () => {
@@ -36,7 +43,10 @@ const InviteMembersPopUp = ({ isVisible, onClose, onClick }) => {
   if (!isVisible) return null;
 
   return (
-    <div className={`popup-overlay ${isVisible ? "show" : ""}`} onClick={onClose}>
+    <div
+      className={`popup-overlay ${isVisible ? "show" : ""}`}
+      onClick={onClose}
+    >
       <div className="popup-content" onClick={(e) => e.stopPropagation()}>
         <div className="show-column">
           <div className="show-row-space-between-header">
@@ -44,7 +54,11 @@ const InviteMembersPopUp = ({ isVisible, onClose, onClick }) => {
               title="Invite Teammates"
               subtitle="Team members can read, edit, add and delete documents in your teamspace."
             />
-            <img alt="close" src={icons.closeIcon} onClick={handleClearAndClose} />
+            <img
+              alt="close"
+              src={icons.closeIcon}
+              onClick={handleClearAndClose}
+            />
           </div>
           <label className="input-form-field-popup">
             Email Id of your teammate
@@ -52,7 +66,13 @@ const InviteMembersPopUp = ({ isVisible, onClose, onClick }) => {
               {emails.map((email, index) => (
                 <div className="email-tag" key={index}>
                   {email}
-                  <img alt="close" style={{width:"16px",height:"16px"}} src={icons.closeIcon} className="remove-email" onClick={() => removeEmail(email)} />
+                  <img
+                    alt="close"
+                    style={{ width: "16px", height: "16px" }}
+                    src={icons.closeIcon}
+                    className="remove-email"
+                    onClick={() => removeEmail(email)}
+                  />
                 </div>
               ))}
               <input
@@ -66,7 +86,7 @@ const InviteMembersPopUp = ({ isVisible, onClose, onClick }) => {
             </div>
           </label>
         </div>
-        <button className="popup-button" onClick={onClick}>
+        <button className="popup-button" onClick={handleInviteMembers}>
           Invite Teammates
         </button>
       </div>

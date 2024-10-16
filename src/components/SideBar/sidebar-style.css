@@ -12,7 +12,7 @@
   cursor: pointer;
 }
 
-.default-img-icon{
+.default-img-icon {
   margin-right: 0.4rem;
   color: var(--textColor);
   stroke-width: 1.2;
@@ -46,7 +46,6 @@
   padding: 4px;
 }
 
-
 .sidebar-icon {
   padding: 0.25rem;
   width: 18px;
@@ -55,11 +54,11 @@
   color: var(--textColor);
 }
 
-.sidebar-button:hover{
+.sidebar-button:hover {
   box-shadow: 0px 1px 7px rgba(3, 106, 106, 0.5);
 }
 
-.sidebar-button:hover .sidebar-icon{
+.sidebar-button:hover .sidebar-icon {
   color: var(--darkTeal);
 }
 
@@ -176,12 +175,10 @@
   color: var(--darkTeal) !important;
 }
 
-
-
 /************************************Teamspace Header***********************/
 
 .team-header {
-  padding: 0.35rem;
+  padding: 0.38rem 0.35rem;
   cursor: pointer;
   color: var(--textColor);
   font-size: var(--fourteen-font-size);
@@ -198,16 +195,16 @@
   flex-direction: row;
   white-space: nowrap;
   overflow: hidden;
-  padding: 0.5rem 0.6rem;
+  padding: 0.2rem 0.6rem;
 }
 
 .folder-header {
   display: flex;
-  width: 100%;
+  width: 94%;
   align-items: center;
   flex-direction: row;
-  padding-left: 0.5rem;
-  padding-top: 0.4rem;
+  padding-left: 1rem;
+  padding-top: 5px;
   padding-bottom: 0.4rem;
   cursor: pointer;
   color: var(--textColor);
@@ -221,7 +218,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  margin-right: 2px;
+  margin: 0;
 }
 
 .folder-title.active {
@@ -229,7 +226,7 @@
 }
 
 .show-row-space-between img {
-  margin-right: 0.4rem;
+  margin-right: 0.2rem;
 }
 
 .show-row-space-between span {
@@ -242,7 +239,7 @@
 }
 
 .document-content {
-  padding-left: 1rem;
+  padding-left: 1.5rem;
   display: flex;
   flex-direction: row;
   padding-top: 5px;
@@ -257,8 +254,6 @@
   background-color: var(--hoverTeal);
 }
 
-
-
 .show-row-space-between.active,
 .document-content:hover,
 .show-row-space-between:hover {
@@ -266,16 +261,13 @@
   background-color: var(--hoverTeal);
 }
 
-
 .show-row-space-between:hover h2,
-.show-row-space-between:hover .default-img-icon{
+.show-row-space-between:hover .default-img-icon {
   color: var(--darkTeal);
 }
 
 .document-content:hover img,
-.show-row-space-between:hover .hide-icon
-
-{
+.show-row-space-between:hover .hide-icon {
   opacity: 1;
   display: inline;
 }
@@ -291,8 +283,6 @@
   align-items: center !important;
   justify-content: space-between !important;
 }
-
-
 
 .team-space {
   padding: 0.1rem 0.8rem;
@@ -329,7 +319,7 @@
   .logo {
     padding: 0px;
     width: 40px;
-    margin:1rem 0.6em;
+    margin: 1rem 0.6em;
     margin-bottom: 0.5rem;
   }
 
@@ -340,8 +330,8 @@
   }
 }
 
-@media (max-width:480px) {
-  .logo{
+@media (max-width: 480px) {
+  .logo {
     width: 40px;
     margin-right: 0.2rem;
   }

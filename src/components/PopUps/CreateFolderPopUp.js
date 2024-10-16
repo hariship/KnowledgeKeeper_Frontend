@@ -52,9 +52,11 @@ const CreateFolderPopUp = ({
       isExist = await apiService.isFolderExist(input,selectedId);
     } else if (title === "Create Document") {
       isExist = await apiService.isDocumentExist(input,selectedId);
+    }else if(title=="New teamspace"){
+      isExist = await apiService.isTeamspaceExist(input);
     }
 
-    if (isExist) {
+    if (!isExist) {
       setWarningMessage(`*${input} name already exists. Please choose a different name.*`);
       return false; 
     }

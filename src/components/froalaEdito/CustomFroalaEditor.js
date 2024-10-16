@@ -22,7 +22,7 @@ const FunctionalEditor = () => {
   const [currentRecommendationIndex, setCurrentRecommendationIndex] =
     useState(0);
   const [activeRecommendation, setActiveRecommendation] = useState("");
-  const [recommendationData, setRecommendationData] = useState([]);
+  const [recommendationData, setRecommendationData] = useState(null);
   const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
   const location = useLocation();
@@ -39,10 +39,10 @@ const FunctionalEditor = () => {
       try {
         let response;
         if (location.pathname.includes("document-edit")) {
-          response = await apiService.getRecommendationForByte(61); //CHANGE IT
+          response = await apiService.getRecommendationForByte(71); //CHANGE IT
           if (response) {
             setRequestData(response.data);
-            const url = response.data.documents[0].doc_content;
+            // const url = response.data.documents[0].doc_content;
             const htmlResponse = await fetch(
               "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
               // url,
@@ -50,10 +50,16 @@ const FunctionalEditor = () => {
             ); //TODO : ADD URL);
             const htmlBlob = await htmlResponse.blob();
             const htmlContent = await htmlBlob.text();
-            setRecommendationData(response.data.documents[0].recommendations);
-            setActiveRecommendation(
-              response.data.documents[0].recommendations[0].previousText
-            );
+            if (response.data.documents) {
+              if (response.data.documents[0]) {
+                setRecommendationData(
+                  response.data.documents[0].recommendations
+                );
+                setActiveRecommendation(
+                  response.data.documents[0].recommendations[0].previous_string
+                );
+              }
+            }
             setModel(htmlContent);
             setIsLoading(false);
           }
@@ -61,7 +67,10 @@ const FunctionalEditor = () => {
           response = await apiService.getRecommendationSingleDoc(id);
           if (response) {
             setRequestData(response);
-            const url = response.docContentUrl;
+            // const url = response.document.doc_content;
+            const url =
+              "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html";
+
             const htmlResponse = await fetch(url, { mode: "cors" });
             const htmlBlob = await htmlResponse.blob();
             const htmlContent = await htmlBlob.text();
@@ -98,10 +107,7 @@ const FunctionalEditor = () => {
   useEffect(() => {
     if (requestData) {
       changedModelRef.current = model;
-      placeCircles(
-        model,
-        requestData.documents[currentDocIndex].recommendations
-      );
+      placeCircles();
     }
   }, [model, currentDocIndex, requestData]);
 
@@ -113,11 +119,10 @@ const FunctionalEditor = () => {
     if (!requestData) return;
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
-    const { recommendations } = requestData.documents[currentDocIndex];
     let updatedModel = model;
-    const recommendation = recommendations[currentRecommendationIndex];
+    const recommendation = recommendationData[currentRecommendationIndex];
     if (recommendation) {
-      const previousText = recommendation.previous_text;
+      const previousText = normalizeText(recommendation.previous_string);
       const targetElement = findTextInElement(doc.body, previousText);
       if (targetElement) {
         const updatedContent = recommendation.change_request_text;
@@ -145,25 +150,47 @@ const FunctionalEditor = () => {
 
   const highlightText = () => {
     if (!requestData) return;
+
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
     let updatedModel = model;
-    const recommendation = recommendationData[currentRecommendationIndex];
-    if (recommendation) {
-      const previousText = recommendation.previous_text;
-      const targetElement = findTextInElement(doc.body, previousText);
+
+    if (activeRecommendation) {
+      let normalizedRecommendation = activeRecommendation
+        .replace(/^\n/, "")
+        .replace(/\n$/, "")
+        .replace(/\n/g, " ");
+      console.log("Normalized Recommendation:", normalizedRecommendation);
+      if (
+        normalizeText(doc.body.textContent).includes(normalizedRecommendation)
+      ) {
+        console.log("Text found in the document body.");
+      } else {
+        console.log("Text NOT found in the document body.");
+      }
+      const targetElement = findTextInElement(
+        doc.body,
+        normalizedRecommendation
+      );
+      console.log("***********************HERE IS Target", targetElement);
+
       if (targetElement) {
-        const content = targetElement.textContent;
-        console.log("new content", content);
+        const content = normalizeText(targetElement.textContent);
+        console.log("New content:", content);
         const updatedContent = content.replace(
-          previousText,
-          `<span style="background-color: #f7ffff;">${previousText}</span>`
+          normalizedRecommendation,
+          `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
         );
         updatedModel = updatedModel.replace(content, updatedContent);
       }
     }
 
     setModel(updatedModel);
+  };
+
+  // Normalize function
+  const normalizeText = (text) => {
+    return text.replace(/\s+/g, " ").trim();
   };
 
   const addFloatingCircle = (x, y, index) => {
@@ -200,28 +227,24 @@ const FunctionalEditor = () => {
     highlightText();
   }, [activeRecommendation]);
 
-
-  
-  const placeCircles = (docContent, recommendations) => {
+  const placeCircles = () => {
     removeFloatingCircles();
     const tempDiv = document.createElement("div");
     tempDiv.style.position = "absolute";
     tempDiv.style.visibility = "hidden";
     tempDiv.style.top = "0";
     tempDiv.style.left = "0";
-    tempDiv.innerHTML = docContent;
+    tempDiv.innerHTML = model;
     document.body.appendChild(tempDiv);
-
     const editorContainer = document.querySelector(".froala-editor");
-    if (editorContainer) {
-      recommendations.forEach((rec, index) => {
-        const previousText = rec.previous_string;
-        
-        console.log("string to be matched",previousText);
+    if (editorContainer && recommendationData) {
+      recommendationData.forEach((rec, index) => {
+        const previousText = normalizeText(rec.previous_string);
+        console.log("string to be matched", previousText);
         if (!previousText) return;
         const range = document.createRange();
         let elementFound = findTextInElement(tempDiv, previousText);
-        console.log(elementFound,"Here is element found");
+        console.log(elementFound, "Here is element found");
         if (elementFound) {
           const startIndex = elementFound.textContent.indexOf(previousText);
           range.setStart(elementFound, startIndex);
@@ -281,7 +304,7 @@ const FunctionalEditor = () => {
     setActiveRecommendation(
       requestData.documents[currentDocIndex].recommendations[
         currentRecommendationIndex
-      ].previousText
+      ].previous_string
     );
     updateModel();
   };
@@ -299,7 +322,7 @@ const FunctionalEditor = () => {
     setActiveRecommendation(
       requestData.documents[currentDocIndex].recommendations[
         currentRecommendationIndex
-      ].previousText
+      ].previous_string
     );
     updateModel();
   };
@@ -337,24 +360,12 @@ const FunctionalEditor = () => {
     );
   }
 
-  // const totalRecommendations = requestData
-  //   ? requestData.documents.reduce(
-  //       (total, doc) => total + doc.recommendations.length,
-  //       0
-  //     )
-  //   : 0;
-
-  // // Extract date and time
-  // const { date_time, request_text, sender } = requestData;
-  // const date = new Date(date_time).toLocaleDateString("en-GB", {
-  //   day: "2-digit",
-  //   month: "short",
-  //   year: "numeric",
-  // });
-  // const time = new Date(date_time).toLocaleTimeString("en-GB", {
-  //   hour: "2-digit",
-  //   minute: "2-digit",
-  // });
+  const totalRecommendations = requestData
+    ? requestData.documents.reduce(
+        (total, doc) => total + doc.recommendations.length,
+        0
+      )
+    : 0;
 
   return (
     <div className="doc-editor">
@@ -373,14 +384,13 @@ const FunctionalEditor = () => {
         <div id="toolbar-container" className="toolbar-container"></div>
         <div className="editor-suggestion">
           <div className="change-request">
-            {/* {showChangeRequest && (
+            {showChangeRequest && (
               <ChangeRequest
                 onResolve={handleOpenResolveWarning}
                 width={editorWidth}
-                requester={sender}
-                date={date}
-                time={time}
-                message={request_text}
+                requester={requestData.request_id}
+                date={requestData.date_time}
+                message={requestData.request_text}
                 aiEdits={`${
                   currentRecommendationIndex + 1
                 }/${totalRecommendations}`}
@@ -388,7 +398,7 @@ const FunctionalEditor = () => {
                 onNext={handleNext}
                 onTap={handleOnTap}
               />
-            )} */}
+            )}
 
             {isLoading ? (
               <EditorSkeleton />
@@ -420,10 +430,7 @@ const FunctionalEditor = () => {
                       },
                       contentChanged: async function () {
                         const updatedModel = this.html.get();
-                        placeCircles(
-                          updatedModel,
-                          requestData.documents[currentDocIndex].recommendations
-                        );
+                        // placeCircles();
                         const htmlBlob = new Blob([updatedModel], {
                           type: "text/html",
                         });
@@ -445,8 +452,8 @@ const FunctionalEditor = () => {
             <RecommendationSkeletonLoader count={4} />
           ) : (
             <div>
-              {recommendationData.map(
-                (recommendation, index) => (
+              {recommendationData &&
+                recommendationData.map((recommendation, index) => (
                   <SuggestionCardComponent
                     isLoading={true}
                     key={recommendation.id}
@@ -463,14 +470,11 @@ const FunctionalEditor = () => {
                       )
                     }
                     onCoverTap={() => {
-                      setActiveRecommendation(
-                        recommendation.previousText || "Default"
-                      );
+                      setActiveRecommendation(recommendation.previous_string);
                       setCurrentRecommendationIndex(index);
                     }}
                   />
-                )
-              )}
+                ))}
             </div>
           )}
         </div>
