@@ -5,12 +5,23 @@ import "froala-editor/css/froala_editor.pkgd.min.css";
 import ChangeRequest from "./changeRequest.js";
 import SuggestionCardComponent from "./SuggestionCardComponent";
 import "./editor-style.css";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { apiService } from "../../services/apiService";
 import RecommendationSkeletonLoader from "../loading-screen/RecommendationSkeleton.js";
 import EditorSkeleton from "../loading-screen/EditorSkeleton.js";
 import ResolveChangeRequestPopUp from "../PopUps/ResolveChangeRequestPopUp.js";
 
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func.apply(null, args);
+    }, delay);
+  };
+};
 const FunctionalEditor = () => {
   const [requestData, setRequestData] = useState(null);
   const [model, setModel] = useState("");
@@ -21,11 +32,17 @@ const FunctionalEditor = () => {
   const changedModelRef = useRef(model);
   const [currentRecommendationIndex, setCurrentRecommendationIndex] =
     useState(0);
+  const [showDialog, setShowDialog] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  let debounceTimer;
+  const debounceDelay = 300000; // 5 minutes timer in milliseconds
+
   const [activeRecommendation, setActiveRecommendation] = useState("");
   const [recommendationData, setRecommendationData] = useState(null);
   const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
@@ -39,7 +56,7 @@ const FunctionalEditor = () => {
       try {
         let response;
         if (location.pathname.includes("document-edit")) {
-          response = await apiService.getRecommendationForByte(71); //CHANGE IT
+          response = await apiService.getRecommendationForByte(81); //CHANGE IT
           if (response) {
             setRequestData(response.data);
             // const url = response.data.documents[0].doc_content;
@@ -76,7 +93,9 @@ const FunctionalEditor = () => {
             const htmlBlob = await htmlResponse.blob();
             const htmlContent = await htmlBlob.text();
             setModel(htmlContent);
-            setRecommendationData(response.data.document.bytes);
+            setRecommendationData(
+              response.data.document.bytes[0].recommendations
+            );
             setIsLoading(false);
           }
         }
@@ -105,16 +124,75 @@ const FunctionalEditor = () => {
     };
   }, [editorRef, model]);
 
+  const uploadDocument = async () => {
+    const htmlBlob = new Blob([model], { type: "text/html" });
+    const htmlFile = new File([htmlBlob], "document.html", {
+      type: "text/html",
+      lastModified: new Date().getTime(),
+    });
+    await apiService.uploadDocument(htmlFile, "1", "", "", "5");
+    changedModelRef.current = model;
+    setIsDirty(false);
+  };
+
+  const debouncedUpload = debounce(() => {
+    clearTimeout(debounceTimer);
+    uploadDocument();
+  }, debounceDelay);
+
+  const handleBeforeUnload = (event) => {
+    if (isDirty) {
+      event.preventDefault();
+      event.returnValue = "You have unsaved changes. Are you sure to leave?";
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isDirty]);
+
+  const handleNavigation = (event) => {
+    if (isDirty) {
+      event.preventDefault();
+      setShowDialog(true);
+    }
+  };
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isDirty) {
+        setShowDialog(true);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isDirty]);
+
+  const handleUpdate = () => {
+    uploadDocument();
+    setShowDialog(false);
+  };
+
+  const handleLeave = () => {
+    setShowDialog(false);
+    window.location.reload();
+  };
+
+  const handleContentChange = (newContent) => {
+    setIsDirty(true);
+    debouncedUpload();
+  };
+
   useEffect(() => {
     if (requestData) {
       changedModelRef.current = model;
       placeCircles();
     }
-  }, [model, currentDocIndex, requestData]);
-
-  const handleModelChange = useCallback((newModel) => {
-    setModel(newModel);
-  }, []);
+  }, [model]);
 
   const replaceText = () => {
     if (!requestData) return;
@@ -124,7 +202,7 @@ const FunctionalEditor = () => {
     const recommendation = recommendationData[currentRecommendationIndex];
     if (recommendation) {
       const previousText = normalizeText(recommendation.previous_string);
-      const targetElement = findTextInElement(doc.body, previousText);
+      const targetElement = findHtmlInElement(doc.body, previousText);
       if (targetElement) {
         const updatedContent = recommendation.change_request_text;
         const content = targetElement.textContent;
@@ -134,15 +212,14 @@ const FunctionalEditor = () => {
     setModel(updatedModel);
   };
 
-  const findTextInElement = (element, text) => {
-    if (
-      element.nodeType === Node.TEXT_NODE &&
-      element.textContent.includes(text)
-    ) {
-      return element;
-    } else if (element.nodeType === Node.ELEMENT_NODE) {
+  const findHtmlInElement = (element, html) => {
+    if (element.nodeType === Node.ELEMENT_NODE) {
+      const normalizedElementHtml = element.outerHTML;
+      if (normalizedElementHtml.includes(html)) {
+        return element;
+      }
       for (let child of element.childNodes) {
-        const found = findTextInElement(child, text);
+        const found = findHtmlInElement(child, html);
         if (found) return found;
       }
     }
@@ -157,32 +234,20 @@ const FunctionalEditor = () => {
     let updatedModel = model;
 
     if (activeRecommendation) {
-      let normalizedRecommendation = activeRecommendation
-        .replace(/^\n/, "")
-        .replace(/\n$/, "")
-        .replace(/\n/g, " ");
-      console.log("Normalized Recommendation:", normalizedRecommendation);
-      if (
-        normalizeText(doc.body.textContent).includes(normalizedRecommendation)
-      ) {
-        console.log("Text found in the document body.");
-      } else {
-        console.log("Text NOT found in the document body.");
-      }
-      const targetElement = findTextInElement(
-        doc.body,
-        normalizedRecommendation
+      let normalizedRecommendation =
+        "When prompted on our platform, you will enter a 6 digit code that is sent to the phone number you added during the sign-up process. (You can update your phone number at any time in your profile). You must ensure that you are using a phone that is able to receive SMS (text messages).";
+
+      const targetElement = Array.from(doc.getElementsByTagName("p")).find(
+        (p) => p.textContent.includes(normalizedRecommendation.trim())
       );
-      console.log("***********************HERE IS Target", targetElement);
+
+      console.log("Target Element:", targetElement);
 
       if (targetElement) {
-        const content = normalizeText(targetElement.textContent);
-        console.log("New content:", content);
-        const updatedContent = content.replace(
-          normalizedRecommendation,
-          `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
-        );
-        updatedModel = updatedModel.replace(content, updatedContent);
+        const content = targetElement.innerHTML;
+        const updatedContent = `<span style="background-color: #f7ffff;">${content}</span>`;
+        targetElement.innerHTML = updatedContent;
+        updatedModel = doc.documentElement.outerHTML;
       }
     }
 
@@ -241,10 +306,10 @@ const FunctionalEditor = () => {
     if (editorContainer && recommendationData) {
       recommendationData.forEach((rec, index) => {
         const previousText = normalizeText(rec.previous_string);
-        console.log("string to be matched", previousText);
+        // console.log("string to be matched", previousText);
         if (!previousText) return;
         const range = document.createRange();
-        let elementFound = findTextInElement(tempDiv, previousText);
+        let elementFound = findHtmlInElement(tempDiv, previousText);
         console.log(elementFound, "Here is element found");
         if (elementFound) {
           const startIndex = elementFound.textContent.indexOf(previousText);
@@ -380,6 +445,17 @@ const FunctionalEditor = () => {
         lButtonText="Resolve CR"
         rButtonText="View AiEdits"
       />
+      {showDialog && (
+        <div className="popup-overlay-custom">
+          <div className="custom-dialog">
+            <p>
+              You have unsaved changes. Are you sure you want to continue? If
+              you wish to keep your changes, please click the 'Update'.
+            </p>
+            <button onClick={handleUpdate}>Update</button>
+          </div>
+        </div>
+      )}
       <div id="editor" className="froala-editor-section fade-in">
         {/* Toolbar Container */}
         <div id="toolbar-container" className="toolbar-container"></div>
@@ -389,7 +465,7 @@ const FunctionalEditor = () => {
               <ChangeRequest
                 onResolve={handleOpenResolveWarning}
                 width={editorWidth}
-                requester={requestData.request_id}
+                requester={requestData.sender}
                 date={requestData.date_time}
                 message={requestData.request_text}
                 aiEdits={`${currentRecommendationIndex + 1}/10`}
@@ -408,7 +484,7 @@ const FunctionalEditor = () => {
                 <FroalaEditorComponent
                   tag="textarea"
                   model={model}
-                  onModelChange={handleModelChange}
+                  // onModelChange={handleModelChange}
                   config={{
                     toolbarSticky: true,
                     editorClass: "froala-editor",
@@ -430,22 +506,8 @@ const FunctionalEditor = () => {
                       },
                       contentChanged: async function () {
                         const updatedModel = this.html.get();
-                        // placeCircles();
-                        const htmlBlob = new Blob([updatedModel], {
-                          type: "text/html",
-                        });
-                        
-                        const htmlFile = new File([htmlBlob],"document.html" ,{
-                          type: "text/html",
-                          lastModified: new Date().getTime(),
-                        });
-                        await apiService.uploadDocument(
-                          htmlFile,
-                          id,
-                          "",
-                          "",
-                          "5"
-                        ); //TODO: CHANGE DOCID HERE
+                        handleContentChange(updateModel);
+
                         changedModelRef.current = updatedModel;
                       },
                     },

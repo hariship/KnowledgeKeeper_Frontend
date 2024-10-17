@@ -184,10 +184,10 @@ class ApiService {
       // formData.append("folderId", folderId);
       // formData.append("documentName", documentName); //change
 
-      for (let pair of formData.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
-        console.log(file);
-      }
+      // for (let pair of formData.entries()) {
+      //   console.log(`${pair[0]}: ${pair[1]}`);
+      //   console.log(file);
+      // }
       const response = await axios.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
         headers: getFormHeaders(true),
       });
