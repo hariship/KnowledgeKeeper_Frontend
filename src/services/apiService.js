@@ -175,18 +175,24 @@ class ApiService {
   }
 
   //Upload Document
-  async uploadDocument(file, docId, clientId) {
+  async uploadDocument(file, docId, documentName, folderId, clientId) {
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", file, );
       formData.append("clientId", clientId);
       formData.append("documentId", docId);
-      // formData.append("folderId", "43");
-      // formData.append("documentName", "New Document"); //change
+      // formData.append("folderId", folderId);
+      // formData.append("documentName", documentName); //change
+
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+        console.log(file);
+      }
       const response = await axios.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
         headers: getFormHeaders(true),
       });
 
+      console.log(response.data);
       if (response.data.status) {
         return response.data;
       } else {
