@@ -44,7 +44,7 @@ const FunctionalEditor = () => {
             setRequestData(response.data);
             // const url = response.data.documents[0].doc_content;
             const htmlResponse = await fetch(
-              "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
+              "https://knowledgekeeper-results.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
               // url,
               { mode: "cors" }
             ); //TODO : ADD URL);
@@ -158,9 +158,9 @@ const FunctionalEditor = () => {
 
     if (activeRecommendation) {
       let normalizedRecommendation = activeRecommendation
-        .replace(/^\n/, "")
-        .replace(/\n$/, "")
-        .replace(/\n/g, " ");
+        ?.replace(/^\n/, "")
+        ?.replace(/\n$/, "")
+        ?.replace(/\n/g, " ");
       console.log("Normalized Recommendation:", normalizedRecommendation);
       if (
         normalizeText(doc.body.textContent).includes(normalizedRecommendation)
@@ -182,7 +182,7 @@ const FunctionalEditor = () => {
           normalizedRecommendation,
           `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
         );
-        updatedModel = updatedModel.replace(content, updatedContent);
+        updatedModel = updatedModel?.replace(content, updatedContent);
       }
     }
 
@@ -191,7 +191,7 @@ const FunctionalEditor = () => {
 
   // Normalize function
   const normalizeText = (text) => {
-    return text.replace(/\s+/g, " ").trim();
+    return text?.replace(/\s+/g, " ").trim();
   };
 
   const addFloatingCircle = (x, y, index) => {
