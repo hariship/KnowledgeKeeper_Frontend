@@ -61,7 +61,7 @@ const FunctionalEditor = () => {
             setRequestData(response.data);
             // const url = response.data.documents[0].doc_content;
             const htmlResponse = await fetch(
-              "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
+              "https://knowledgekeeper-results.s3.us-east-2.amazonaws.com/Doordash/Doordash.html",
               // url,
               { mode: "cors" }
             ); //TODO : ADD URL);
@@ -256,7 +256,7 @@ const FunctionalEditor = () => {
 
   // Normalize function
   const normalizeText = (text) => {
-    return text.replace(/\s+/g, " ").trim();
+    return text?.replace(/\s+/g, " ").trim();
   };
 
   const addFloatingCircle = (x, y, index) => {
