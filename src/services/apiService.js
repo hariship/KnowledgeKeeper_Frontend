@@ -181,6 +181,8 @@ class ApiService {
       formData.append("file", file);
       formData.append("clientId", clientId);
       formData.append("documentId", docId);
+      // formData.append("folderId", "43");
+      // formData.append("documentName", "New Document"); //change
       const response = await axios.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
         headers: getFormHeaders(true),
       });
@@ -269,20 +271,26 @@ class ApiService {
   //Create Document
   async createDocument(documentName, folderId) {
     try {
-      const emptyHtmlContent =
-        "<!DOCTYPE html>\n<html>\n<head>\n<title>Empty Document</title>\n</head>\n<body>\n</body>\n</html>";
+      const emptyHtmlContent = `<!DOCTYPE html>\n<html>\n<head>\n<title>${documentName}</title>\n</head>\n<body>\n</body>\n</html>`;
       const blob = new Blob([emptyHtmlContent], { type: "text/html" });
-      const file = new File([blob], "document.html", { type: "text/html" });
+      const formattedDocumentName = documentName.replace(/\s+/g, "_");
+      const file = new File(
+        [blob],
+        `document_${folderId}_${formattedDocumentName}.html`,
+        { type: "text/html" }
+      );
+
       const formData = new FormData();
-      formData.append("file", file, "document.html");
+      formData.append("file", file);
+      formData.append("clientId", "5");
       formData.append("folderId", folderId);
       formData.append("documentName", documentName);
-      const response = await axios.post(ENDPOINTS.CREATE_DOCUMENT, formData, {
-        headers: getHeaders(true),
+      console.log("Document uploaded successfully", formData.append);
+      const response = await axios.post(ENDPOINTS.UPLOAD_DOCUMENT, formData, {
+        headers: getFormHeaders(true),
       });
 
       if (response.data.status) {
-        console.log("Document uploaded successfully", response.data);
         return response.data;
       } else {
         throw new Error("Failed to upload document");
@@ -491,9 +499,13 @@ class ApiService {
   async createTeamspace(teamspaceName) {
     try {
       const requestBody = { teamspaceName };
-      const response = await axios.post(ENDPOINTS.CREATE_TEAMSPACE, requestBody, {
-        headers: getHeaders(true),
-      });
+      const response = await axios.post(
+        ENDPOINTS.CREATE_TEAMSPACE,
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
       console.log(response.data);
       return response.data;
     } catch (error) {
@@ -508,13 +520,9 @@ class ApiService {
   async createFolder(folderName, teamspaceId) {
     try {
       const requestBody = { folderName, teamspaceId };
-      const response = await axios.post(
-        ENDPOINTS.CREATE_FOLDER,
-        requestBody,
-        {
-          headers: getHeaders(true),
-        }
-      );
+      const response = await axios.post(ENDPOINTS.CREATE_FOLDER, requestBody, {
+        headers: getHeaders(true),
+      });
       console.log(response.data);
       return response.data;
     } catch (error) {
@@ -564,28 +572,27 @@ class ApiService {
       throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
     }
   }
- //INVITE TEAMMEMBERS
- async inviteMembers(email, teamspaceId) {
-  try {
-
-    const requestBody = {userId, email };
-    const response = await axios.post(
-      ENDPOINTS.INVITE_MEMBERS(teamspaceId),
-      requestBody,
-      {
-        headers: getHeaders(true),
-      }
-    );
-    console.log(response);
-    toast.success(response.data.message);
-    return response.data.isUnique;
-  } catch (error) {
-    toast.error(
-      error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
-    );
-    throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+  //INVITE TEAMMEMBERS
+  async inviteMembers(email, teamspaceId) {
+    try {
+      const requestBody = { userId, email };
+      const response = await axios.post(
+        ENDPOINTS.INVITE_MEMBERS(teamspaceId),
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      console.log(response);
+      toast.success(response.data.message);
+      return response.data.isUnique;
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
+      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    }
   }
-}
   //CHECK DOCUMENT EXIST
   async isDocumentExist(documentName, folderId) {
     try {
@@ -642,7 +649,9 @@ class ApiService {
       toast.error(
         error.response?.error || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
       );
-      throw error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+      throw (
+        error.response?.data.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
     }
   }
 

@@ -200,7 +200,7 @@
 
 .folder-header {
   display: flex;
-  width: 94%;
+  width: 92%;
   align-items: center;
   flex-direction: row;
   padding-left: 1rem;
@@ -213,7 +213,7 @@
   overflow: hidden;
 }
 .folder-title {
-  flex-grow: 1;
+ width: 90%;
   color: var(--textColor);
   overflow: hidden;
   white-space: nowrap;
@@ -239,6 +239,7 @@
 }
 
 .document-content {
+  width: 90%;
   padding-left: 1.5rem;
   display: flex;
   flex-direction: row;

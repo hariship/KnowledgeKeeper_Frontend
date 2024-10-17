@@ -67,9 +67,10 @@ const FunctionalEditor = () => {
           response = await apiService.getRecommendationSingleDoc(id);
           if (response) {
             setRequestData(response);
-            // const url = response.document.doc_content;
-            const url =
-              "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html";
+            console.log("here is response",response.data);
+            const url = response.data.document.doc_content;
+            // const url =
+            //   "https://knowledgekeeper-docs.s3.us-east-2.amazonaws.com/Doordash/Doordash.html";
 
             const htmlResponse = await fetch(url, { mode: "cors" });
             const htmlBlob = await htmlResponse.blob();
@@ -360,12 +361,12 @@ const FunctionalEditor = () => {
     );
   }
 
-  const totalRecommendations = requestData
-    ? requestData.documents.reduce(
-        (total, doc) => total + doc.recommendations.length,
-        0
-      )
-    : 0;
+  // const totalRecommendations = requestData
+  //   ? requestData.documents.reduce(
+  //       (total, doc) => total + doc.recommendations.length,
+  //       0
+  //     )
+  //   : 0;
 
   return (
     <div className="doc-editor">
@@ -391,9 +392,8 @@ const FunctionalEditor = () => {
                 requester={requestData.request_id}
                 date={requestData.date_time}
                 message={requestData.request_text}
-                aiEdits={`${
-                  currentRecommendationIndex + 1
-                }/${totalRecommendations}`}
+                aiEdits={`${currentRecommendationIndex + 1}/10`}
+                // }/${totalRecommendations}`}
                 onPrevious={handlePrevious}
                 onNext={handleNext}
                 onTap={handleOnTap}
@@ -434,12 +434,11 @@ const FunctionalEditor = () => {
                         const htmlBlob = new Blob([updatedModel], {
                           type: "text/html",
                         });
-                        const fileName = `document_29.html`; //replace number with docId
-                        const htmlFile = new File([htmlBlob], fileName, {
+                        const htmlFile = new File([htmlBlob], {
                           type: "text/html",
                           lastModified: new Date().getTime(),
                         });
-                        await apiService.uploadDocument(htmlFile, "29", "5");
+                        // await apiService.uploadDocument(htmlFile, "54", "5"); //TODO: CHANGE DOCID HERE
                         changedModelRef.current = updatedModel;
                       },
                     },
