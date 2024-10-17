@@ -192,7 +192,7 @@ class ApiService {
         headers: getFormHeaders(true),
       });
 
-      console.log(response.data);
+      console.log("Document Updated: ",response.data);
       if (response.data.status) {
         return response.data;
       } else {
