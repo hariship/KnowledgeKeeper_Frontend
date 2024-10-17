@@ -14,6 +14,7 @@ export const ENDPOINTS = {
   CREATE_FOLDER: `${API_BASE_URL}clients/${CLIENT_ID}/folders`,
   CREATE_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
   GET_DOCUMENT: `${API_BASE_URL}clients/${CLIENT_ID}/documents`,
+  MODIFY_RECOMMENDATION: `${API_BASE_URL}clients/modify`,
   CHECK_TEAMSPACE_EXIST: `${API_BASE_URL}clients/${CLIENT_ID}/teamspaces/unique`,
   CHECK_FOLDER_EXIST: (teamspaceId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/teamspaces/${teamspaceId}/folders/unique`,
@@ -22,7 +23,6 @@ export const ENDPOINTS = {
     `${API_BASE_URL}clients/${CLIENT_ID}/bytes/${byteId}/recommendations`,
   GET_RECOMMENDATION_FOR_DOC: (docId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/documents/${docId}/recommendations`,
-  // https://api-core.knowledgekeeper.ai/api/v1/clients/5/documents/42/recommendations
   RENAME_OR_DELETE_FOLDER: (folderId) =>
     `${API_BASE_URL}clients/${CLIENT_ID}/folders/${folderId}`,
   RENAME_OR_DELETE_TEAMSPACE: (teamspaceId) =>

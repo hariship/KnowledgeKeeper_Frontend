@@ -12,7 +12,7 @@ import { apiService } from "../services/apiService.js";
 import SkeletonLoaderComponent from "../components/loading-screen/SkeletonLoaderComponent.js";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FiRefreshCw } from 'react-icons/fi';
+import { FiRefreshCw } from "react-icons/fi";
 
 const AllRequests = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const AllRequests = () => {
 
   const getOpenRequests = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const data = await apiService.getOpenChangeRequest();
       setOpenRequestList(Array.isArray(data) ? data : []);
       setLastRefreshTime(new Date());
@@ -46,31 +46,28 @@ const AllRequests = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeSinceLastRefresh(getTimeSinceLastRefresh());
-    }, 15); 
-    return () => clearInterval(interval); 
+    }, 15);
+    return () => clearInterval(interval);
   }, [lastRefreshTime]);
-  
-  
+
   const getTimeSinceLastRefresh = () => {
     if (!lastRefreshTime) return "";
 
-  
     const seconds = Math.floor((new Date() - lastRefreshTime) / 1000);
-  
-    if (seconds < 10) return "just now"; 
-    if (seconds < 60) return "a few seconds ago"; 
-  
+
+    if (seconds < 10) return "just now";
+    if (seconds < 60) return "a few seconds ago";
+
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes} minutes ago`;
-  
+
     const hours = Math.floor(minutes / 60);
     return `${hours} hours ago`;
   };
-  
 
   const getClosedRequests = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const data = await apiService.getClosedRequest();
       setResolvedRequestList(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -116,12 +113,11 @@ const AllRequests = () => {
       handleCloseDeleteDocPopUp();
     }
   };
-  
-const handleFeedback=async()=>{
-  await apiService.addByteFeedback(selectedByte);
-  handleResolveByte();
-}
 
+  const handleFeedback = async () => {
+    await apiService.addByteFeedback(selectedByte);
+    handleResolveByte();
+  };
 
   const handleResolveByte = async () => {
     console.log(selectedByte);
@@ -145,8 +141,7 @@ const handleFeedback=async()=>{
     } else {
       const result = await apiService.getRecommendationForByte(byteId);
       if (result.status === "success") {
-        navigate("/home/document-edit/29");
-        // navigate(`/home/document-edit/${result.data.documents[0].doc_id}`); //TODO REPLACE WITH DOCID
+        navigate(`/home/document-edit/${result.data.documents[0].doc_id}/${byteId}`);
       } else {
         toast.error(result.message);
       }
@@ -159,27 +154,32 @@ const handleFeedback=async()=>{
         <div className="tab-buttons">
           <button
             className={activeTab === "open" ? "active" : ""}
-            onClick={() => handleTabChange("open")}
+            onClick={() => {
+              setLoading(true);
+              handleTabChange("open");
+            }}
           >
             Open
           </button>
           <button
             className={activeTab === "resolved" ? "active" : ""}
-            onClick={() => handleTabChange("resolved")}
+            onClick={() => {
+              setLoading(true);
+              handleTabChange("resolved");
+            }}
           >
             Resolved
           </button>
         </div>
-        <div style={{display:"flex",flexDirection:"row"}}>
-        
+        <div style={{ display: "flex", flexDirection: "row" }}>
           {activeTab === "open" && openRequestList.length > 0 && (
-  <div className="refresh-button" onClick={getOpenRequests}>
-    <button>
-      <span>Refreshed {timeSinceLastRefresh}</span>
-      <FiRefreshCw size={12} />
-    </button>
-  </div>
-)}
+            <div className="refresh-button" onClick={getOpenRequests}>
+              <button>
+                <span>Refreshed {timeSinceLastRefresh}</span>
+                <FiRefreshCw size={12} />
+              </button>
+            </div>
+          )}
           {openRequestList.length > 0 && (
             <div className="change-request-option" onClick={handlePopupToggle}>
               <img src={icons.addIcon} alt="icon" />
@@ -229,7 +229,7 @@ const handleFeedback=async()=>{
               key={index}
               title={item.byteInfo}
               employee_name={item.clientId.clientName}
-              date={item.clientId.createdAt} //todo check key
+              date={item.createdAt}
             />
           ))
         )}

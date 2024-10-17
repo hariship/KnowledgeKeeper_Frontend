@@ -54,7 +54,7 @@ const HomePage = () => {
           <Route path="all-requests" element={<AllRequests />} />
           <Route path="trash" element={<TrashPage />} />
           <Route path="integration" element={<IntegrationPage />} />
-          <Route path="document-edit/:id" element={<FunctionalEditor />} />
+          <Route path="document-edit/:id/:byteId" element={<FunctionalEditor />} />
           <Route path="document/:id" element={<FunctionalEditor />} />
         </Routes>
       </div>

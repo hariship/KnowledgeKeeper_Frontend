@@ -44,9 +44,9 @@ const TeamSpace = ({
   const tooltipId = "teamspace-tooltip";
   useEffect(() => {
     const isActiveInTeam = folderList.some((folder) =>
-      folder.documents.some((doc) => doc.id === activeItem)
+      folder.documents.some((doc) => String(doc.id) === String(activeItem))
     );
-    if (isActiveInTeam) setIsOpen(true);
+   if (isActiveInTeam) setIsOpen(true);
   }, [activeItem, folderList]);
 
   const toggleOpen = () => {

@@ -5,10 +5,15 @@ import SvgDoneCheck from "../../icons/DoneCheck";
 
 const ResolvedRequestComponent = ({ title, employee_name, date }) => {
   const tooltipId = "resolved-request-tooltip";
-  const formatDate = (dateString) => {
-    const options = { day: "2-digit", month: "long", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-GB", options);
-  };
+  const byteDate = new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const time = new Date(date).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   return (
     <div className="open-request-container">
       <div className="header-title">
@@ -18,7 +23,7 @@ const ResolvedRequestComponent = ({ title, employee_name, date }) => {
         </span>
       </div>
       <div className="header-detail">
-        {employee_name} <span>|</span> {formatDate(date)}
+        {employee_name} <span>|</span> {byteDate} {time}
       </div>
       <CustomTooltip id={tooltipId} />
     </div>

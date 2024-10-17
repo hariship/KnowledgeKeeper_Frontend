@@ -55,12 +55,14 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     isCreateDocPopupVisible,
   ]);
 
+  //Get User Data : Teamspace
   const getClientDetails = async () => {
     const data = await apiService.getUserTeamSpace();
     setProjectList(data);
     console.log("navigation activeItem", activeItem);
   };
 
+  //Toggle Sidebar
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
@@ -70,69 +72,68 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     }
   };
 
+  //Logout
   const handleOpenLogoutPopUp = () => {
     setisLogoutPopVisible(true);
   };
   const handleCloseLogoutPopUp = () => {
     setisLogoutPopVisible(false);
   };
+
+  //Toggle Dropdown
   const toggleDropdown = () => {
     setIsDropdownVisible((prevState) => !prevState);
   };
 
+  //Invite Members
   const handleOpenInvitePopUp = () => {
     setIsInviteMemberPopUpVisible(true);
   };
-  const handleCloseMenu = () => {
-    handleCloseInvitePopUp();
-  };
-
   const handleCloseInvitePopUp = () => {
     setIsInviteMemberPopUpVisible(false);
   };
-  //CREATE
+
+
+  //CREATE Teamspace
   const handleCreateTeamspaceClick = (e) => {
     e.stopPropagation();
     setIsCreateTeamSpacePopupVisible(true);
   };
-
   const handleCreateTeamspace = async (teamspaceName) => {
     await apiService.createTeamspace(teamspaceName);
     handleCloseTeamspacePopup();
   };
-
-  const handleCreateFolderClick = (teamspaceId) => {
-    setSelectedId(teamspaceId);
-    console.log("here is selectedId", teamspaceId);
-    setIsCreateFolderPopupVisible(true);
+  const handleCloseTeamspacePopup = () => {
+    setIsCreateTeamSpacePopupVisible(false);
   };
 
+  //Create Folder
+  const handleCreateFolderClick = (teamspaceId) => {
+    setSelectedId(teamspaceId);
+    setIsCreateFolderPopupVisible(true);
+  };
   const handleCreateFolder = async (folderName) => {
     await apiService.createFolder(folderName, selectedId);
     handleCloseFolderPopup();
   };
+  const handleCloseFolderPopup = () => {
+    setIsCreateFolderPopupVisible(false);
+  };
 
+
+//Create Document
   const handleCreateDocument = async (folderId, documentName) => {
     await apiService.createDocument(documentName, folderId);
     handleCloseDocPopup();
-  };
-
-  const handleCloseTeamspacePopup = () => {
-    setIsCreateTeamSpacePopupVisible(false);
-  };
-  const handleCloseFolderPopup = () => {
-    setIsCreateFolderPopupVisible(false);
   };
   const handleCreateDocClick = (folderId) => {
     setSelectedId(folderId);
     setIsCreateDocPopupVisible(true);
   };
-
-  const handleCloseDocPopup = () => {
+ const handleCloseDocPopup = () => {
     setIsCreateDocPopupVisible(false);
   };
-
-  const handleDocumentClick = (id) => {
+ const handleDocumentClick = (id) => {
     navigate(`document/${id}`);
   };
 

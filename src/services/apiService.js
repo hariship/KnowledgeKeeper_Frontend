@@ -175,10 +175,10 @@ class ApiService {
   }
 
   //Upload Document
-  async uploadDocument(file, docId, documentName, folderId, clientId) {
+  async uploadDocument(file, docId, clientId) {
     try {
       const formData = new FormData();
-      formData.append("file", file, );
+      formData.append("file", file);
       formData.append("clientId", clientId);
       formData.append("documentId", docId);
       // formData.append("folderId", folderId);
@@ -192,7 +192,7 @@ class ApiService {
         headers: getFormHeaders(true),
       });
 
-      console.log("Document Updated: ",response.data);
+      console.log("Document Updated: ", response.data);
       if (response.data.status) {
         return response.data;
       } else {
@@ -231,6 +231,53 @@ class ApiService {
         error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
       );
       throw error;
+    }
+  }
+
+  //ACCEPT/REJECT RECOMMENDATION
+  async acceptRejectByte(
+    byteId,
+    docId,
+    clientId,
+    sectionHeadingType,
+    sectionHeadingText,
+    sectionContent,
+    recommendationAction
+  ) {
+    try {
+      const requestBody = {
+        userId,
+        byteId,
+        docId,
+        clientId,
+        changeRequestType: "Update",
+        changes: [
+          {
+            externalAttributeId: "",
+            sectionHeadingType,
+            sectionHeadingText,
+            sectionContent,
+          },
+        ],
+        changeSummary: "",
+        isTrained: false,
+        recommendationAction,
+      };
+      const response = await axios.post(
+        ENDPOINTS.MODIFY_RECOMMENDATION,
+        requestBody,
+        {
+          headers: getHeaders(true),
+        }
+      );
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        return response.data;
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+      );
     }
   }
 
@@ -277,7 +324,7 @@ class ApiService {
   //Create Document
   async createDocument(documentName, folderId) {
     try {
-      const emptyHtmlContent = `<!DOCTYPE html>\n<html>\n<head>\n<title>${documentName}</title>\n</head>\n<body>\n</body>\n</html>`;
+      const emptyHtmlContent = `<!DOCTYPE html>\n<html>\n<head>\n<h2>${documentName}</h2>\n</head>\n<body>\n</body>\n</html>`;
       const blob = new Blob([emptyHtmlContent], { type: "text/html" });
       const formattedDocumentName = documentName.replace(/\s+/g, "_");
       const file = new File(
