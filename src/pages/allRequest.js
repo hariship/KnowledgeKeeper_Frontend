@@ -141,7 +141,9 @@ const AllRequests = () => {
     } else {
       const result = await apiService.getRecommendationForByte(byteId);
       if (result.status === "success") {
-        navigate(`/home/document-edit/${result.data.documents[0].doc_id}/${byteId}`);
+        navigate(
+          `/home/${byteId}/document-edit/${result.data.documents[0].doc_id}`
+        );
       } else {
         toast.error(result.message);
       }
@@ -189,9 +191,16 @@ const AllRequests = () => {
         </div>
       </div>
       <div className="tab-content">
-        {" "}
         {loading ? (
-          <SkeletonLoaderComponent length={5} />
+          activeTab === "open" ? (
+            <SkeletonLoaderComponent length={10} />
+          ) : (
+            <SkeletonLoaderComponent
+              length={21}
+              padding="12"
+              margin="3px 0px"
+            />
+          )
         ) : activeTab === "open" ? (
           openRequestList.length === 0 ? (
             <DefaultAllRequestTab

@@ -5,8 +5,7 @@ import SvgDoneCheck from "../../icons/DoneCheck";
 
 const SuggestionCardComponent = ({
   num,
-  title,
-  content,
+  recommendationData,
   onTapAccept,
   onTapReject,
   isRecommendationAccepted,
@@ -23,7 +22,37 @@ const SuggestionCardComponent = ({
 
   const [isAccepted, setIsAccepted] = useState(isRecommendationAccepted);
   const [isRejected, setIsRejected] = useState(isRecommendationRejected);
+  const {
+    section_main_heading1,
+    section_main_heading2,
+    section_main_heading3,
+    section_main_heading4,
+    change_request_text,
+  } = recommendationData;
 
+  let filteredContent = change_request_text;
+  
+  const removeHeadingAndElement = (content, heading) => {
+    if (!heading) return content; 
+    const regex = new RegExp(`<h[1-6][^>]*>[^<]*${heading}[^<]*<\\/h[1-6]>`, "gi");
+    return content.replace(regex, "");
+  };
+    filteredContent = removeHeadingAndElement(
+    filteredContent,
+    section_main_heading1
+  );
+  filteredContent = removeHeadingAndElement(
+    filteredContent,
+    section_main_heading2
+  );
+  filteredContent = removeHeadingAndElement(
+    filteredContent,
+    section_main_heading3
+  );
+  filteredContent = removeHeadingAndElement(
+    filteredContent,
+    section_main_heading4
+  );
   return (
     <div
       className={`suggestion-container ${isActive ? "active" : ""}`}
@@ -31,13 +60,15 @@ const SuggestionCardComponent = ({
     >
       <div className="suggestion-header">
         <span className="suggestion-num">{num}</span>
-        <span className="suggestion-title">{title}</span>
+        <span className="suggestion-title">
+          {recommendationData.change_request_type}
+        </span>
       </div>
       <div
         className={`suggestion-content ${isActive ? "active" : ""}`}
         ref={contentRef}
       >
-         <div dangerouslySetInnerHTML={{ __html: content }} />
+        <div dangerouslySetInnerHTML={{ __html: filteredContent }} />
       </div>
       {isActive &&
         (!isAccepted && !isRejected ? (
