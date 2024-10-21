@@ -242,13 +242,14 @@ class ApiService {
     sectionHeadingType,
     sectionHeadingText,
     sectionContent,
-    recommendationAction
+    recommendationAction,recommendationId
   ) {
     try {
       const requestBody = {
         userId,
         byteId,
         docId,
+        recommendationId,
         clientId,
         changeRequestType: "Update",
         changes: [

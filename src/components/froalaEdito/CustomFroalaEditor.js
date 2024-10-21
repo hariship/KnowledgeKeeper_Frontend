@@ -67,7 +67,7 @@ const FunctionalEditor = ({ activeItem }) => {
     useState(-2);
   // const [showDialog, setShowDialog] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const debounceDelay = 300000; // 5 minutes timer in milliseconds
+  const debounceDelay = 10000; // 5 minutes timer in milliseconds TODO 300000
   const [fileName, setFileName] = useState("");
   const [activeRecommendation, setActiveRecommendation] = useState("");
   const [recommendationData, setRecommendationData] = useState(null);
@@ -89,6 +89,7 @@ const FunctionalEditor = ({ activeItem }) => {
     if (!showChangeRequest) {
       fetchData();
     }
+    isFirstContentChange.current = true;
   }, [location]);
 
   //FETCH DOCUMENT DATA
@@ -205,13 +206,13 @@ const FunctionalEditor = ({ activeItem }) => {
       type: "text/html",
       lastModified: new Date().getTime(),
     });
-    console.log("Model TO Be Updated");
+    console.log("Model Filename", fileName);
+    console.log("Model TO Be Updated", newContent);
     await apiService.uploadDocument(htmlFile, id, "5");
     changedModelRef.current = newContent;
     setIsDirty(false);
   };
 
- 
   const debouncedUpload = debounce((newContent) => {
     console.log(newContent, "inside debouncedUpload");
     uploadDocument(newContent);
@@ -239,20 +240,21 @@ const FunctionalEditor = ({ activeItem }) => {
   };
 
   const handleContentChange = (newContent) => {
-    setRealTimeModel(newContent);
     console.log("Called debounce");
+    console.log("Debounced", newContent);
+    setRealTimeModel(newContent);
     setIsDirty(true);
     debouncedUpload(newContent);
   };
 
   //Recommendation Functionality
-  // useEffect(() => {
-  //   if (requestData) {
-  //     changedModelRef.current = model;
-  //     realTimeModelRef.current = realTimeModel;
-  //     placeCircles();
-  //   }
-  // }, [model]);
+  useEffect(() => {
+    if (requestData) {
+      // changedModelRef.current = model;
+      // realTimeModelRef.current = model;
+      // placeCircles();
+    }
+  }, [model]);
 
   const addText = () => {
     if (!requestData) return;
@@ -294,6 +296,7 @@ const FunctionalEditor = ({ activeItem }) => {
       );
 
       const newModel = model + `${filteredContent}`;
+      changedModelRef.current = newModel;
       setModel(newModel);
       setIsDirty(true);
     }
@@ -365,24 +368,39 @@ const FunctionalEditor = ({ activeItem }) => {
 
   const findHtmlInElement = (element, html) => {
     const parser = new DOMParser();
-    const parsedHtml = parser.parseFromString(html, "text/html").body.textContent.trim();
-    
-    if (element.nodeType === Node.ELEMENT_NODE || element.nodeType === Node.TEXT_NODE) {
+    const parsedHtml = parser
+      .parseFromString(html, "text/html")
+      .body.innerHTML.trim(); // Parse HTML and normalize it
+
+    if (
+      element.nodeType === Node.ELEMENT_NODE ||
+      element.nodeType === Node.TEXT_NODE
+    ) {
+      const normalizedElementHtml = element.innerHTML
+        ? element.innerHTML.trim()
+        : "";
       const normalizedElementText = element.textContent.trim();
-      console.log("NormalizedElement", normalizedElementText);
-      console.log("NormalizedHtml", parsedHtml); 
-  
-      if (normalizedElementText.includes(parsedHtml)) {
-        return element; 
+
+      console.log("NormalizedElementHtml", normalizedElementHtml);
+      console.log("NormalizedElementText", normalizedElementText);
+      console.log("ParsedHtml", parsedHtml);
+
+      // Check both textContent and innerHTML to handle plain text and HTML
+      if (
+        normalizedElementHtml.includes(parsedHtml) ||
+        normalizedElementText.includes(html.trim())
+      ) {
+        return element;
       }
-        for (let child of element.childNodes) {
+
+      // Recursively check child elements
+      for (let child of element.childNodes) {
         const found = findHtmlInElement(child, html);
         if (found) return found;
       }
     }
-    return null; 
+    return null;
   };
-  
 
   const parseHtmlToNormalText = (htmlString) => {
     const parser = new DOMParser();
@@ -447,32 +465,47 @@ const FunctionalEditor = ({ activeItem }) => {
     tempDiv.style.left = "0";
     tempDiv.innerHTML = model;
     document.body.appendChild(tempDiv);
+
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer && recommendationData) {
       recommendationData.forEach((rec, index) => {
-        const previousText = rec.previous_string;
-        const normalizedRecommendation = parseHtmlToNormalText(
-          previousText
-        );
-        console.log("previousText",previousText);
-        if (!previousText) return;
+        const previousHtml = rec.previous_string;
+        console.log("previousHtml", previousHtml);
+        if (!previousHtml) return;
+
         const range = document.createRange();
-        let elementFound = findHtmlInElement(tempDiv, previousText);
-        console.log("element found",elementFound);
+        let elementFound = findHtmlInElement(tempDiv, previousHtml);
+        console.log("element found", elementFound);
+
         if (elementFound) {
-          const startIndex = elementFound.textContent.indexOf(previousText);
-          range.setStart(elementFound, startIndex);
-          range.setEnd(elementFound, startIndex + previousText.length);
-          const changeRequest = document.querySelector(
-            ".change-request-container"
+          // Find the start index of the previous HTML in the found element's innerHTML
+          const startIndex = elementFound.innerHTML.indexOf(
+            previousHtml.trim()
           );
-          const changeRect = changeRequest.getBoundingClientRect();
-          const editorRect = editorContainer.getBoundingClientRect();
-          const rect = range.getBoundingClientRect();
-          const x = editorRect.left;
-          const y = editorRect.top + window.scrollY + changeRect.height;
-          addFloatingCircle(x, y, index + 1);
+
+          // Check if the previousHtml is found in the elementFound innerHTML
+          if (startIndex !== -1) {
+            range.setStart(elementFound.firstChild, 0);
+            range.setEnd(
+              elementFound.firstChild,
+              elementFound.firstChild.length
+            );
+
+            const changeRequest = document.querySelector(
+              ".change-request-container"
+            );
+            const changeRect = changeRequest.getBoundingClientRect();
+            const editorRect = editorContainer.getBoundingClientRect();
+            const rect = range.getBoundingClientRect();
+
+            const x = editorRect.left;
+            const y = editorRect.top + window.scrollY + changeRect.height;
+            addFloatingCircle(x, y, index + 1);
+          } else {
+            console.warn(`HTML "${previousHtml}" not found in the element.`);
+          }
         } else {
+          console.warn(`No element found for HTML "${previousHtml}".`);
         }
       });
     }

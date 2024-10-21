@@ -24,6 +24,7 @@ const SuggestionCardComponent = ({
   const [isAccepted, setIsAccepted] = useState(isRecommendationAccepted);
   const [isRejected, setIsRejected] = useState(isRecommendationRejected);
   const {
+    id,
     section_main_heading1,
     section_main_heading2,
     section_main_heading3,
@@ -67,7 +68,7 @@ const SuggestionCardComponent = ({
       "h1",
       section_main_heading1,
       recommendationData.previous_string,
-      action
+      action,id
     );
 
     console.log(response);
@@ -97,7 +98,7 @@ const SuggestionCardComponent = ({
               className="accept-button"
               onClick={async (e) => {
                 e.stopPropagation();
-                // const response = await handleModeifyRecommendation("ACCEPTED");
+                const response = await handleModeifyRecommendation("ACCEPTED");
                 onTapAccept();
                 setIsAccepted(true);
               }}
