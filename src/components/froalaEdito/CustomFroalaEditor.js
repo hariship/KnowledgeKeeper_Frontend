@@ -2,6 +2,35 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import FroalaEditorComponent from "react-froala-wysiwyg";
 import "froala-editor/js/froala_editor.pkgd.min.js";
 import "froala-editor/css/froala_editor.pkgd.min.css";
+import "froala-editor/js/froala_editor.pkgd.min.js";
+import "froala-editor/js/plugins/align.min.js";
+import "froala-editor/js/plugins/char_counter.min.js";
+import "froala-editor/js/plugins/colors.min.js";
+import "froala-editor/css/plugins/colors.min.css";
+import "froala-editor/js/plugins/draggable.min.js";
+import "froala-editor/js/plugins/emoticons.min.js";
+import "froala-editor/css/plugins/emoticons.min.css";
+import "froala-editor/js/plugins/font_family.min.js";
+import "froala-editor/js/plugins/font_size.min.js";
+import "froala-editor/js/plugins/inline_style.min.js";
+import "froala-editor/js/plugins/line_breaker.min.js";
+import "froala-editor/js/plugins/link.min.js";
+import "froala-editor/js/plugins/lists.min.js";
+import "froala-editor/js/plugins/paragraph_format.min.js";
+import "froala-editor/js/plugins/paragraph_style.min.js";
+import "froala-editor/js/plugins/quote.min.js";
+import "froala-editor/js/plugins/table.min.js";
+// import "froala-editor/js/plugins/video.min.js";
+// import "froala-editor/js/plugins/file.min.js";
+import "froala-editor/js/plugins/special_characters.min.js";
+// import "froala-editor/js/plugins/print.min.js";
+import "froala-editor/js/plugins/help.min.js";
+import "froala-editor/js/plugins/fullscreen.min.js";
+import "froala-editor/css/froala_editor.pkgd.min.css";
+import "froala-editor/js/plugins/word_paste.min.js";
+// import "froala-editor/js/plugins/image.min.js";
+// import "froala-editor/css/plugins/image.min.css";
+import "froala-editor/css/froala_style.min.css";
 import ChangeRequest from "./changeRequest.js";
 import SuggestionCardComponent from "./SuggestionCardComponent";
 import "./editor-style.css";
@@ -14,38 +43,39 @@ import ResolveChangeRequestPopUp from "../PopUps/ResolveChangeRequestPopUp.js";
 const debounce = (func, delay) => {
   let timeoutId;
   return (...args) => {
+    console.log(timeoutId, "TIme Out");
+    console.log(delay, "Delay");
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
     timeoutId = setTimeout(() => {
       func.apply(null, args);
+      console.log("Function called");
     }, delay);
   };
 };
-const FunctionalEditor = () => {
+const FunctionalEditor = ({ activeItem }) => {
+  const isFirstContentChange = useRef(true);
   const [requestData, setRequestData] = useState(null);
   const [model, setModel] = useState("");
   const [realTimeModel, setRealTimeModel] = useState("");
-  const [currentDocIndex, setCurrentDocIndex] = useState(0);
   const [showChangeRequest, setShowChangeRequest] = useState(false);
   const [showResolveWarning, setShowResolveWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const changedModelRef = useRef(model);
   const [currentRecommendationIndex, setCurrentRecommendationIndex] =
     useState(-2);
-  const [showDialog, setShowDialog] = useState(false);
+  // const [showDialog, setShowDialog] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  let debounceTimer;
   const debounceDelay = 300000; // 5 minutes timer in milliseconds
-
   const [fileName, setFileName] = useState("");
   const [activeRecommendation, setActiveRecommendation] = useState("");
   const [recommendationData, setRecommendationData] = useState(null);
   const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
   const realTimeModelRef = useRef(realTimeModel);
-
   const location = useLocation();
+
   const navigate = useNavigate();
   const { id, byteId } = useParams();
 
@@ -53,16 +83,13 @@ const FunctionalEditor = () => {
     if (location.pathname.includes("document-edit")) {
       setShowChangeRequest(true);
     } else if (location.pathname.includes("document")) {
+      setIsLoading(true);
       setShowChangeRequest(false);
     }
     if (!showChangeRequest) {
       fetchData();
     }
   }, [location]);
-
-  useEffect(() => {
-    fetchData();
-  }, [byteId]);
 
   //FETCH DOCUMENT DATA
   const fetchData = async () => {
@@ -74,6 +101,12 @@ const FunctionalEditor = () => {
         response = await apiService.getRecommendationForByte(byteId);
         if (response) {
           setRequestData(response.data);
+          navigate(
+            `/home/${byteId}/document-edit/${response.data.documents[0].doc_id}`,
+            {
+              replace: true,
+            }
+          );
           const url = response.data.documents[0].doc_content;
           const htmlResponse = await fetch(url, { mode: "cors" });
           const htmlBlob = await htmlResponse.blob();
@@ -100,11 +133,6 @@ const FunctionalEditor = () => {
                 ...allRecommendations,
                 ...mappedRecommendations,
               ];
-              // console.log(
-              //   doc_id,
-              //   "here is all recommendation",
-              //   allRecommendations
-              // );
             });
 
             setRecommendationData(allRecommendations);
@@ -140,7 +168,8 @@ const FunctionalEditor = () => {
                 }))
             );
             setRecommendationData(mappedRecommendations);
-            // setActiveRecommendation(mappedRecommendations[0].previous_string);
+          } else {
+            setRecommendationData([]);
           }
 
           setIsLoading(false);
@@ -171,20 +200,19 @@ const FunctionalEditor = () => {
 
   //Upload Document : 5 minutes delay
   const uploadDocument = async (newContent) => {
-    if (newContent) {
-      const htmlBlob = new Blob([newContent], { type: "text/html" });
-      const htmlFile = new File([htmlBlob], fileName, {
-        type: "text/html",
-        lastModified: new Date().getTime(),
-      });
-      await apiService.uploadDocument(htmlFile, id, "5");
-      changedModelRef.current = model;
-      setIsDirty(false);
-    }
+    const htmlBlob = new Blob([newContent], { type: "text/html" });
+    const htmlFile = new File([htmlBlob], fileName, {
+      type: "text/html",
+      lastModified: new Date().getTime(),
+    });
+    console.log("Model TO Be Updated");
+    await apiService.uploadDocument(htmlFile, id, "5");
+    changedModelRef.current = newContent;
+    setIsDirty(false);
   };
 
+ 
   const debouncedUpload = debounce((newContent) => {
-    // clearTimeout(debounceTimer);
     console.log(newContent, "inside debouncedUpload");
     uploadDocument(newContent);
   }, debounceDelay);
@@ -202,39 +230,74 @@ const FunctionalEditor = () => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [isDirty]);
-
-  useEffect(() => {
-    const handlePopState = () => {
-      if (isDirty) {
-        // setShowDialog(true);
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [isDirty]);
+  }, [isDirty, location]);
 
   const handleUpdate = () => {
-    uploadDocument(realTimeModelRef.current);
-    setShowDialog(false);
+    if (isDirty) {
+      uploadDocument(realTimeModelRef.current);
+    }
   };
 
   const handleContentChange = (newContent) => {
     setRealTimeModel(newContent);
+    console.log("Called debounce");
     setIsDirty(true);
     debouncedUpload(newContent);
   };
 
   //Recommendation Functionality
-  useEffect(() => {
-    if (requestData) {
-      changedModelRef.current = model;
-      realTimeModelRef.current = realTimeModel;
-      placeCircles();
+  // useEffect(() => {
+  //   if (requestData) {
+  //     changedModelRef.current = model;
+  //     realTimeModelRef.current = realTimeModel;
+  //     placeCircles();
+  //   }
+  // }, [model]);
+
+  const addText = () => {
+    if (!requestData) return;
+    const recommendation = recommendationData[currentRecommendationIndex];
+    if (recommendation) {
+      const {
+        section_main_heading1,
+        section_main_heading2,
+        section_main_heading3,
+        section_main_heading4,
+        change_request_text,
+      } = recommendation;
+
+      let filteredContent = change_request_text;
+      const removeHeadingAndElement = (content, heading) => {
+        if (!heading) return content;
+        const regex = new RegExp(
+          `<h[1-6][^>]*>[^<]*${heading}[^<]*<\\/h[1-6]>`,
+          "gi"
+        );
+        return content.replace(regex, "");
+      };
+
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading1
+      );
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading2
+      );
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading3
+      );
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading4
+      );
+
+      const newModel = model + `${filteredContent}`;
+      setModel(newModel);
+      setIsDirty(true);
     }
-  }, [realTimeModel]);
+  };
 
   const replaceText = () => {
     if (!requestData) return;
@@ -243,67 +306,113 @@ const FunctionalEditor = () => {
     let updatedModel = model;
     const recommendation = recommendationData[currentRecommendationIndex];
     if (recommendation) {
-      const previousText = recommendation.previous_string;
-      const targetElement = findHtmlInElement(doc.body, previousText);
-      if (targetElement) {
-        const updatedContent = recommendation.change_request_text;
-        const content = targetElement.textContent;
-        updatedModel = updatedModel.replace(content, updatedContent);
-      }
+      const previousText = parseHtmlToNormalText(
+        recommendation.previous_string
+      );
+      const {
+        section_main_heading1,
+        section_main_heading2,
+        section_main_heading3,
+        section_main_heading4,
+        change_request_text,
+      } = recommendation;
+
+      let filteredContent = change_request_text;
+
+      const removeHeadingAndElement = (content, heading) => {
+        if (!heading) return content;
+        const regex = new RegExp(
+          `<h[1-6][^>]*>[^<]*${heading}[^<]*<\\/h[1-6]>`,
+          "gi"
+        );
+        return content.replace(regex, "");
+      };
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading1
+      );
+      console.log(filteredContent, "Filter Content");
+      console.log("previous text", previousText);
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading2
+      );
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading3
+      );
+      filteredContent = removeHeadingAndElement(
+        filteredContent,
+        section_main_heading4
+      );
+      const allElements = doc.body.getElementsByTagName("*");
+      Array.from(allElements).forEach((element) => {
+        if (element.innerHTML.includes(previousText)) {
+          console.log(
+            element.innerHTML.includes(previousText),
+            "Here is the array"
+          );
+          const replacedText = element.innerHTML.replace(
+            previousText,
+            filteredContent
+          );
+          element.innerHTML = replacedText;
+        }
+      });
     }
     setModel(updatedModel);
   };
 
   const findHtmlInElement = (element, html) => {
-    if (element.nodeType === Node.ELEMENT_NODE) {
-      const normalizedElementHtml = element.outerHTML;
-      if (normalizedElementHtml.includes(html)) {
-        return element;
+    const parser = new DOMParser();
+    const parsedHtml = parser.parseFromString(html, "text/html").body.textContent.trim();
+    
+    if (element.nodeType === Node.ELEMENT_NODE || element.nodeType === Node.TEXT_NODE) {
+      const normalizedElementText = element.textContent.trim();
+      console.log("NormalizedElement", normalizedElementText);
+      console.log("NormalizedHtml", parsedHtml); 
+  
+      if (normalizedElementText.includes(parsedHtml)) {
+        return element; 
       }
-      for (let child of element.childNodes) {
+        for (let child of element.childNodes) {
         const found = findHtmlInElement(child, html);
         if (found) return found;
       }
     }
-    return null;
+    return null; 
   };
+  
 
   const parseHtmlToNormalText = (htmlString) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
     return doc.body.textContent || ""; // Return text content without changing space structure
   };
+  const handleModelChange = useCallback((newModel) => {
+    setModel(newModel);
+  }, []);
 
   const highlightText = () => {
     if (!requestData || !activeRecommendation) return;
-
-    // // Replace any newline escape characters in activeRecommendation
-    // let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
-    // console.log(activeRecommendation, "Here is active recom");
+    let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
-    const normalizedRecommendation = parseHtmlToNormalText(activeRecommendation);
-      // console.log("Normalized recommendation:1234", normalizedRecommendation);
+    const normalizedRecommendation = parseHtmlToNormalText(
+      activeRecWithNewlines
+    );
     const allElements = doc.body.getElementsByTagName("*");
     Array.from(allElements).forEach((element) => {
-      // console.log(
-      //   element.innerHTML.includes(normalizedRecommendation),
-      //   "here is"
-      // );
       if (element.innerHTML.includes(normalizedRecommendation)) {
         const highlightedContent = element.innerHTML.replace(
           normalizedRecommendation,
-          `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>` 
+          `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
         );
         element.innerHTML = highlightedContent;
-        console.log(
-          "highlightedContent recommendation:",
-          highlightedContent
-        );
       }
     });
     const updatedModel = doc.documentElement.outerHTML;
-    setModel(updatedModel);
+    // setModel(updatedModel);
   };
 
   const addFloatingCircle = (x, y, index) => {
@@ -326,7 +435,7 @@ const FunctionalEditor = () => {
 
   useEffect(() => {
     highlightText();
-  }, [activeRecommendation]);
+  }, [activeRecommendation]); //TODO
 
   //Place floating circle
   const placeCircles = () => {
@@ -341,7 +450,10 @@ const FunctionalEditor = () => {
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer && recommendationData) {
       recommendationData.forEach((rec, index) => {
-        const previousText = rec.previous_string; 
+        const previousText = rec.previous_string;
+        const normalizedRecommendation = parseHtmlToNormalText(
+          previousText
+        );
         console.log("previousText",previousText);
         if (!previousText) return;
         const range = document.createRange();
@@ -381,6 +493,7 @@ const FunctionalEditor = () => {
       requestData.request_id
     );
     if (status) {
+      console.log(requestData, "Request Data for resolve");
       setShowResolveWarning(true);
     } else {
       handleResolveByte();
@@ -413,6 +526,7 @@ const FunctionalEditor = () => {
     );
     const currentDocId = recommendationData[currentRecommendationIndex].doc_id;
     if (id !== currentDocId) {
+      handleUpdate();
       navigate(`/home/${byteId}/document-edit/${currentDocId}`, {
         replace: true,
       });
@@ -430,13 +544,6 @@ const FunctionalEditor = () => {
     setCurrentRecommendationIndex(-1);
     navigate(`/home/document/${id}`);
   };
-
-  // const handleModelChange = (newModel) => {
-  //   console.log("handle model change called", newModel);
-  //   setModel(newModel);
-  //   console.log("**********************************************\n");
-  //   console.log(model, "Here is new model");
-  // };
 
   //LOADING
   if (isLoading) {
@@ -467,22 +574,11 @@ const FunctionalEditor = () => {
         onClickLButton={handleResolveByte}
         onClickRButton={handleCloseResolveWarning}
         onClose={handleCloseResolveWarning}
-        title="5 Open AiEdits" //change number
-        subtitle="Do you still wish to resolve the Change Request ?"
+        title="Open AiEdits Pending"
+        subtitle="Do you still wish to resolve the Change Request?"
         lButtonText="Resolve CR"
         rButtonText="View AiEdits"
       />
-      {showDialog && (
-        <div className="popup-overlay-custom">
-          <div className="custom-dialog">
-            <p>
-              You have unsaved changes. Are you sure you want to continue? If
-              you wish to keep your changes, please click the 'Update'.
-            </p>
-            <button onClick={handleUpdate}>Update</button>
-          </div>
-        </div>
-      )}
       <div id="editor" className="froala-editor-section fade-in">
         {/* Toolbar Container */}
         <div id="toolbar-container" className="toolbar-container"></div>
@@ -512,12 +608,12 @@ const FunctionalEditor = () => {
                 <FroalaEditorComponent
                   tag="textarea"
                   model={model}
-                  // onModelChange={handleModelChange}
+                  onModelChange={handleModelChange}
                   config={{
                     toolbarSticky: true,
                     editorClass: "froala-editor",
                     spellcheck: true,
-                    attribution: false,
+                    attribution: true,
                     heightMin: 200,
                     heightMax: 800,
                     placeholderText: "Edit your content here...",
@@ -526,6 +622,7 @@ const FunctionalEditor = () => {
                     toolbarContainer: "#toolbar-container",
                     events: {
                       initialized: function () {
+                        isFirstContentChange.current = true;
                         const secondToolbar =
                           document.querySelector(".fr-second-toolbar");
                         if (secondToolbar) {
@@ -534,8 +631,12 @@ const FunctionalEditor = () => {
                       },
                       contentChanged: async function () {
                         const updatedModel = this.html.get();
-                        handleContentChange(updatedModel);
                         changedModelRef.current = updatedModel;
+                        if (isFirstContentChange.current) {
+                          isFirstContentChange.current = false;
+                        } else {
+                          handleContentChange(updatedModel);
+                        }
                       },
                     },
                   }}
@@ -555,7 +656,14 @@ const FunctionalEditor = () => {
                     num={index + 1}
                     recommendationData={recommendation}
                     isActive={currentRecommendationIndex === index}
-                    onTapAccept={replaceText}
+                    onTapAccept={() => {
+                      if (recommendation.change_request_type === "Add") {
+                        console.log("here is add text");
+                        addText();
+                      } else {
+                        replaceText();
+                      }
+                    }}
                     onTapReject={() =>
                       console.log(
                         `Rejected recommendation ${

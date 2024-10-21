@@ -7,14 +7,13 @@ import TrashPage from "./TrashPage";
 import IntegrationPage from "./IntegrationPage";
 import FunctionalEditor from "../components/froalaEdito/CustomFroalaEditor";
 import { useAuth } from "../components/ProtectedRoute/AuthContext";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const { setIsLoggedIn } = useAuth();
   const [activeItem, setActiveItem] = useState("All Requests");
   const [isTeamspaceOpen, setIsTeamspaceOpen] = useState(false);
   const location = useLocation();
-  const id=useParams();
   const navigate = useNavigate();
   useEffect(() => {
     const token = sessionStorage.getItem("authToken");
@@ -55,8 +54,8 @@ const HomePage = () => {
           <Route path="all-requests" element={<AllRequests />} />
           <Route path="trash" element={<TrashPage />} />
           <Route path="integration" element={<IntegrationPage />} />
-          <Route path=":byteId/document-edit/:id/" element={<FunctionalEditor />} />
-          <Route path="document/:id" element={<FunctionalEditor />} />
+          <Route path=":byteId/document-edit/:id/" element={<FunctionalEditor  activeItem={activeItem}/>} />
+          <Route path="document/:id" element={<FunctionalEditor activeItem={activeItem} />} />
         </Routes>
       </div>
     </div>

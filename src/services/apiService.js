@@ -259,10 +259,11 @@ class ApiService {
             sectionContent,
           },
         ],
-        changeSummary: "",
+        changeSummary: "Update using accept button",
         isTrained: false,
         recommendationAction,
       };
+      console.log(requestBody,"requestBody");
       const response = await axios.post(
         ENDPOINTS.MODIFY_RECOMMENDATION,
         requestBody,
@@ -275,6 +276,7 @@ class ApiService {
         return response.data;
       }
     } catch (error) {
+      console.log(error);
       toast.error(
         error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
       );

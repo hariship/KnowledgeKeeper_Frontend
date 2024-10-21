@@ -72,6 +72,7 @@
   text-decoration: none !important;
 }
 .toolbar-container {
+  z-index: 43;
   margin: 10px 0px;
   border-radius: 20px;
   width: 90%;

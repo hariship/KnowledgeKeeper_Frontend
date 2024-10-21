@@ -139,14 +139,14 @@ const AllRequests = () => {
       setSelectedByte(byteId);
       handleZeroEditPopUp();
     } else {
-      const result = await apiService.getRecommendationForByte(byteId);
-      if (result.status === "success") {
+      // const result = await apiService.getRecommendationForByte(byteId);
+      // if (result.status === "success") {
         navigate(
-          `/home/${byteId}/document-edit/${result.data.documents[0].doc_id}`
-        );
-      } else {
-        toast.error(result.message);
-      }
+          `/home/${byteId}/document-edit/loading`);
+      //   );
+      // } else {
+      //   toast.error(result.message);
+      // }
     }
   };
   return (
