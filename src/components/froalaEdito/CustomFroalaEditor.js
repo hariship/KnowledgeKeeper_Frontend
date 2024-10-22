@@ -316,9 +316,9 @@ const FunctionalEditor = ({ activeItem }) => {
         section_main_heading4,
         change_request_text,
       } = recommendation;
-
+  
       let filteredContent = change_request_text;
-
+  
       const removeHeadingAndElement = (content, heading) => {
         if (!heading) return content;
         const regex = new RegExp(
@@ -345,22 +345,25 @@ const FunctionalEditor = ({ activeItem }) => {
         filteredContent,
         section_main_heading4
       );
+  
+      const normalizeText = (text) => text.replace(/\s+/g, " ").trim();
+      
       const allElements = doc.body.getElementsByTagName("*");
       Array.from(allElements).forEach((element) => {
-        if (element.innerHTML.includes(previousText)) {
-          console.log(
-            element.innerHTML.includes(previousText),
-            "Here is the array"
-          );
+        const elementText = normalizeText(element.innerHTML);
+        if (elementText.includes(normalizeText(previousText))) {
+          console.log("Found matching element");
           const replacedText = element.innerHTML.replace(
-            previousText,
+            normalizeText(previousText),
             filteredContent
           );
           element.innerHTML = replacedText;
         }
       });
+  
+      updatedModel = doc.body.innerHTML;  
     }
-    setModel(updatedModel);
+    setModel(updatedModel);  
   };
 
   const findHtmlInElement = (element, html) => {
