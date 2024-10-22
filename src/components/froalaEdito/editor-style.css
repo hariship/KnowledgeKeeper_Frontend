@@ -83,6 +83,12 @@
   display: none !important;
 }
 
+mark {
+  background-color: red; /* Custom highlight color */
+  color: #000; /* Custom text color */
+}
+
+
 .fr-wrapper {
   max-height: none !important;
   border: none !important;

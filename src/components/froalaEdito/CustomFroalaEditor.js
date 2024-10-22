@@ -240,9 +240,6 @@ const FunctionalEditor = ({ activeItem }) => {
   };
 
   const handleContentChange = (newContent) => {
-    console.log("Called debounce");
-    console.log("Debounced", newContent);
-    setRealTimeModel(newContent);
     setIsDirty(true);
     debouncedUpload(newContent);
   };
@@ -252,7 +249,7 @@ const FunctionalEditor = ({ activeItem }) => {
     if (requestData) {
       // changedModelRef.current = model;
       // realTimeModelRef.current = model;
-      // placeCircles();
+      placeCircles();
     }
   }, [model]);
 
@@ -370,7 +367,7 @@ const FunctionalEditor = ({ activeItem }) => {
     const parser = new DOMParser();
     const parsedHtml = parser
       .parseFromString(html, "text/html")
-      .body.innerHTML.trim(); // Parse HTML and normalize it
+      .body.innerHTML.trim();
 
     if (
       element.nodeType === Node.ELEMENT_NODE ||
@@ -381,14 +378,10 @@ const FunctionalEditor = ({ activeItem }) => {
         : "";
       const normalizedElementText = element.textContent.trim();
 
-      console.log("NormalizedElementHtml", normalizedElementHtml);
-      console.log("NormalizedElementText", normalizedElementText);
-      console.log("ParsedHtml", parsedHtml);
-
-      // Check both textContent and innerHTML to handle plain text and HTML
+      // Check both innerHTML and textContent to handle both HTML and plain text matches
       if (
-        normalizedElementHtml.includes(parsedHtml) ||
-        normalizedElementText.includes(html.trim())
+        normalizedElementHtml.includes(parsedHtml) || // Check for parsed HTML
+        normalizedElementText.includes(parsedHtml) // Check for text match
       ) {
         return element;
       }
@@ -402,36 +395,156 @@ const FunctionalEditor = ({ activeItem }) => {
     return null;
   };
 
+  const placeCircles = () => {
+    removeFloatingCircles();
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.visibility = "hidden";
+    tempDiv.style.top = "0";
+    tempDiv.style.left = "0";
+    tempDiv.innerHTML = model; 
+    document.body.appendChild(tempDiv);
+
+    const editorContainer = document.querySelector(".froala-editor");
+    if (editorContainer && recommendationData) {
+      recommendationData.forEach((rec, index) => {
+        const previousHtml = parseHtmlToNormalText(rec.previous_string);
+        if (!previousHtml) {
+          console.warn(
+            `No previous HTML string for recommendation index ${index}`
+          );
+          return; 
+        }
+
+        const range = document.createRange();
+        let elementFound = findHtmlInElement(tempDiv, previousHtml);
+        console.log("Element found:", elementFound);
+        if (elementFound) {
+          console.log(`Element innerHTML:`, elementFound.innerHTML);
+          const elementHtml = elementFound.innerHTML.trim();
+          const startIndex = elementHtml.indexOf(previousHtml.trim());
+          if (startIndex !== -1) {
+            const node = elementFound.firstChild;
+            if (node && node.nodeType === Node.TEXT_NODE) {
+              range.setStart(node, startIndex);
+              range.setEnd(node, startIndex + previousHtml.trim().length);
+            } else if (node) {
+              range.selectNodeContents(node);
+            }
+
+            const changeRequest = document.querySelector(
+              ".change-request-container"
+            );
+            const changeRect = changeRequest.getBoundingClientRect();
+            const editorRect = editorContainer.getBoundingClientRect();
+            const rect = range.getBoundingClientRect();
+
+            const x = editorRect.left + rect.left;
+            const y = editorRect.top + window.scrollY + changeRect.height;
+
+            addFloatingCircle(x, y, index + 1);
+          } else {
+            console.warn(
+              `HTML "${previousHtml}" not found in element HTML:`,
+              elementHtml
+            );
+          }
+        } else {
+          console.warn(`No element found for HTML "${previousHtml}".`);
+        }
+      });
+    } else {
+      console.warn("Editor container or recommendation data not found.");
+    }
+    document.body.removeChild(tempDiv);
+  };
+
   const parseHtmlToNormalText = (htmlString) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, "text/html");
-    return doc.body.textContent || ""; // Return text content without changing space structure
+    return doc.body.textContent || "";
   };
   const handleModelChange = useCallback((newModel) => {
     setModel(newModel);
   }, []);
 
   const highlightText = () => {
-    if (!requestData || !activeRecommendation) return;
+    if (!requestData || !activeRecommendation) {
+      console.warn("No requestData or activeRecommendation found.");
+      return;
+    }
+
     let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
+    console.log("Active Recommendation with newlines:", activeRecWithNewlines);
+
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
     const normalizedRecommendation = parseHtmlToNormalText(
       activeRecWithNewlines
     );
+    console.log("Normalized Recommendation:", normalizedRecommendation);
+    clearPreviousHighlights(doc);
     const allElements = doc.body.getElementsByTagName("*");
-    Array.from(allElements).forEach((element) => {
-      if (element.innerHTML.includes(normalizedRecommendation)) {
+    console.log("All elements to search:", allElements.length);
+
+    Array.from(allElements).forEach((element, index) => {
+      if (element.textContent.includes(normalizedRecommendation)) {
+        console.log(
+          `Match found in element at index ${index}:`,
+          element.innerHTML
+        );
         const highlightedContent = element.innerHTML.replace(
           normalizedRecommendation,
-          `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
+          `<mark>${normalizedRecommendation}</mark>` 
         );
         element.innerHTML = highlightedContent;
+        console.log(
+          `Updated innerHTML for element at index ${index}:`,
+          element.innerHTML
+        );
       }
     });
+
     const updatedModel = doc.documentElement.outerHTML;
-    // setModel(updatedModel);
+    setModel(updatedModel); 
   };
+
+  // Function to clear previous highlights
+  const clearPreviousHighlights = (doc) => {
+    // Clear previous highlights by replacing <mark> with empty string
+    const originalInnerHTML = doc.body.innerHTML;
+    doc.body.innerHTML = originalInnerHTML.replace(
+      /<mark>(.*?)<\/mark>/g,
+      "$1"
+    );
+    console.log(
+      "Cleared previous highlights. New innerHTML:",
+      doc.body.innerHTML
+    );
+  };
+
+  //OLD
+  // const highlightText = () => {
+  //   if (!requestData || !activeRecommendation) return;
+  //   let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
+  //   let parser = new DOMParser();
+  //   let doc = parser.parseFromString(model, "text/html");
+  //   const normalizedRecommendation = parseHtmlToNormalText(
+  //     activeRecWithNewlines
+  //   );
+  //   const allElements = doc.body.getElementsByTagName("*");
+  //   Array.from(allElements).forEach((element) => {
+  //     if (element.innerHTML.includes(normalizedRecommendation)) {
+  //       const highlightedContent = element.innerHTML.replace(
+  //         normalizedRecommendation,
+  //         `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
+  //       );
+  //       element.innerHTML = highlightedContent;
+  //     }
+  //   });
+  //   const updatedModel = doc.documentElement.outerHTML;
+  //   // setModel(updatedModel);
+  // };
 
   const addFloatingCircle = (x, y, index) => {
     const editorContainer = document.querySelector(".froala-editor");
@@ -454,63 +567,6 @@ const FunctionalEditor = ({ activeItem }) => {
   useEffect(() => {
     highlightText();
   }, [activeRecommendation]); //TODO
-
-  //Place floating circle
-  const placeCircles = () => {
-    removeFloatingCircles();
-    const tempDiv = document.createElement("div");
-    tempDiv.style.position = "absolute";
-    tempDiv.style.visibility = "hidden";
-    tempDiv.style.top = "0";
-    tempDiv.style.left = "0";
-    tempDiv.innerHTML = model;
-    document.body.appendChild(tempDiv);
-
-    const editorContainer = document.querySelector(".froala-editor");
-    if (editorContainer && recommendationData) {
-      recommendationData.forEach((rec, index) => {
-        const previousHtml = rec.previous_string;
-        console.log("previousHtml", previousHtml);
-        if (!previousHtml) return;
-
-        const range = document.createRange();
-        let elementFound = findHtmlInElement(tempDiv, previousHtml);
-        console.log("element found", elementFound);
-
-        if (elementFound) {
-          // Find the start index of the previous HTML in the found element's innerHTML
-          const startIndex = elementFound.innerHTML.indexOf(
-            previousHtml.trim()
-          );
-
-          // Check if the previousHtml is found in the elementFound innerHTML
-          if (startIndex !== -1) {
-            range.setStart(elementFound.firstChild, 0);
-            range.setEnd(
-              elementFound.firstChild,
-              elementFound.firstChild.length
-            );
-
-            const changeRequest = document.querySelector(
-              ".change-request-container"
-            );
-            const changeRect = changeRequest.getBoundingClientRect();
-            const editorRect = editorContainer.getBoundingClientRect();
-            const rect = range.getBoundingClientRect();
-
-            const x = editorRect.left;
-            const y = editorRect.top + window.scrollY + changeRect.height;
-            addFloatingCircle(x, y, index + 1);
-          } else {
-            console.warn(`HTML "${previousHtml}" not found in the element.`);
-          }
-        } else {
-          console.warn(`No element found for HTML "${previousHtml}".`);
-        }
-      });
-    }
-    document.body.removeChild(tempDiv);
-  };
 
   const removeFloatingCircles = () => {
     const editorContainer = document.querySelector(".froala-editor");
@@ -665,6 +721,7 @@ const FunctionalEditor = ({ activeItem }) => {
                       contentChanged: async function () {
                         const updatedModel = this.html.get();
                         changedModelRef.current = updatedModel;
+                        setRealTimeModel(updatedModel);
                         if (isFirstContentChange.current) {
                           isFirstContentChange.current = false;
                         } else {
