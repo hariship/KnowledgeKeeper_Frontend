@@ -347,7 +347,6 @@ const FunctionalEditor = ({ activeItem }) => {
       );
   
       const normalizeText = (text) => text.replace(/\s+/g, " ").trim();
-      
       const allElements = doc.body.getElementsByTagName("*");
       Array.from(allElements).forEach((element) => {
         const elementText = normalizeText(element.innerHTML);
@@ -438,7 +437,7 @@ const FunctionalEditor = ({ activeItem }) => {
             const changeRequest = document.querySelector(
               ".change-request-container"
             );
-            const changeRect = changeRequest.getBoundingClientRect();
+            const changeRect = changeRequest.getBoundingClientRect() ?? null;
             const editorRect = editorContainer.getBoundingClientRect();
             const rect = range.getBoundingClientRect();
 
@@ -471,46 +470,91 @@ const FunctionalEditor = ({ activeItem }) => {
     setModel(newModel);
   }, []);
 
+  // const highlightText = () => {
+  //   if (!requestData || !activeRecommendation) {
+  //     console.warn("No requestData or activeRecommendation found.");
+  //     return;
+  //   }
+  //   let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
+  //   console.log("Active Recommendation with newlines:", activeRecWithNewlines);
+
+  //   let parser = new DOMParser();
+  //   let doc = parser.parseFromString(model, "text/html");
+  //   const normalizedRecommendation = parseHtmlToNormalText(
+  //     activeRecWithNewlines
+  //   );
+  //   console.log("Normalized Recommendation:", normalizedRecommendation);
+  //   clearPreviousHighlights(doc);
+  //   const allElements = doc.body.getElementsByTagName("*");
+  //   console.log("All elements to search:", allElements.length);
+
+  //   Array.from(allElements).forEach((element, index) => {
+  //     if (element.textContent.includes(normalizedRecommendation)) {
+  //       console.log(
+  //         `Match found in element at index ${index}:`,
+  //         element.innerHTML
+  //       );
+  //       const highlightedContent = element.innerHTML.replace(
+  //         normalizedRecommendation,
+  //         `<mark>${normalizedRecommendation}</mark>` 
+  //       );
+  //       element.innerHTML = highlightedContent;
+  //       console.log(
+  //         `Updated innerHTML for element at index ${index}:`,
+  //         element.innerHTML
+  //       );
+  //     }
+  //   });
+
+  //   const updatedModel = doc.documentElement.outerHTML;
+  //   setModel(updatedModel); 
+  // };
   const highlightText = () => {
     if (!requestData || !activeRecommendation) {
       console.warn("No requestData or activeRecommendation found.");
       return;
     }
-
+    
     let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
     console.log("Active Recommendation with newlines:", activeRecWithNewlines);
-
+  
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
-    const normalizedRecommendation = parseHtmlToNormalText(
-      activeRecWithNewlines
-    );
+    const normalizedRecommendation = parseHtmlToNormalText(activeRecWithNewlines);
     console.log("Normalized Recommendation:", normalizedRecommendation);
+  
     clearPreviousHighlights(doc);
-    const allElements = doc.body.getElementsByTagName("*");
-    console.log("All elements to search:", allElements.length);
-
-    Array.from(allElements).forEach((element, index) => {
-      if (element.textContent.includes(normalizedRecommendation)) {
-        console.log(
-          `Match found in element at index ${index}:`,
-          element.innerHTML
-        );
-        const highlightedContent = element.innerHTML.replace(
-          normalizedRecommendation,
-          `<mark>${normalizedRecommendation}</mark>` 
-        );
-        element.innerHTML = highlightedContent;
-        console.log(
-          `Updated innerHTML for element at index ${index}:`,
-          element.innerHTML
-        );
+    
+    // Create a regular expression for the normalized recommendation
+    const regex = new RegExp(`(${normalizedRecommendation})`, 'gi');
+  
+    // Function to recursively search through nodes
+    const highlightInNode = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const match = regex.exec(node.textContent);
+        if (match) {
+          // Create a new span with the highlighted text
+          const highlight = document.createElement('mark');
+          highlight.textContent = match[0];
+          const range = document.createRange();
+          range.setStart(node, match.index);
+          range.setEnd(node, match.index + match[0].length);
+          range.deleteContents();
+          range.insertNode(highlight);
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        Array.from(node.childNodes).forEach(highlightInNode); // Recurse through child nodes
       }
-    });
-
+    };
+  
+    // Start the highlight process from the body of the document
+    highlightInNode(doc.body);
+  
     const updatedModel = doc.documentElement.outerHTML;
-    setModel(updatedModel); 
+    setModel(updatedModel);
   };
+  
+  
 
   // Function to clear previous highlights
   const clearPreviousHighlights = (doc) => {

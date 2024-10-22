@@ -3,6 +3,7 @@ import { ENDPOINTS } from "./endPoint";
 import { MESSAGES } from "./message";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 const API_KEY = process.env.REACT_APP_API_KEY;
 const userId = sessionStorage.getItem("clientId");
 const getHeaders = (isProtected = false) => {
@@ -47,6 +48,10 @@ class ApiService {
       if (status === "success") {
         sessionStorage.setItem("authToken", token);
         sessionStorage.setItem("clientId", userId);
+        const user = jwtDecode(token);
+        sessionStorage.setItem("email", user.email);
+        const expirationTime = user.exp * 1000;
+        sessionStorage.setItem("expiration", expirationTime);
         console.log(MESSAGES.AUTH.LOGIN_SUCCESS);
         return response.data;
       } else {
@@ -76,6 +81,8 @@ class ApiService {
         sessionStorage.setItem("clientId", userId);
         const user = jwtDecode(token);
         sessionStorage.setItem("email", user.email);
+        const expirationTime = user.exp * 1000;
+        sessionStorage.setItem("expiration", expirationTime);
         return response.data;
       } else {
         // If login is failed, it means it is a new user, and hence do a sign up
@@ -106,6 +113,8 @@ class ApiService {
         sessionStorage.setItem("clientId", userId);
         const user = jwtDecode(token);
         sessionStorage.setItem("email", user.email);
+        const expirationTime = user.exp * 1000;
+        sessionStorage.setItem("expiration", expirationTime);
         return response.data;
       } else {
         console.error(MESSAGES.AUTH.LOGIN_FAILURE);
@@ -135,6 +144,10 @@ class ApiService {
       if (status === "success") {
         sessionStorage.setItem("authToken", token);
         sessionStorage.setItem("clientId", userId);
+        const user = jwtDecode(token);
+        sessionStorage.setItem("email", user.email);
+        const expirationTime = user.exp * 1000;
+        sessionStorage.setItem("expiration", expirationTime);
         return response.data;
       } else {
         // Handle failed status
@@ -242,7 +255,8 @@ class ApiService {
     sectionHeadingType,
     sectionHeadingText,
     sectionContent,
-    recommendationAction,recommendationId
+    recommendationAction,
+    recommendationId
   ) {
     try {
       const requestBody = {
@@ -264,7 +278,7 @@ class ApiService {
         isTrained: false,
         recommendationAction,
       };
-      console.log(requestBody,"requestBody");
+      console.log(requestBody, "requestBody");
       const response = await axios.post(
         ENDPOINTS.MODIFY_RECOMMENDATION,
         requestBody,
@@ -365,18 +379,20 @@ class ApiService {
 
   //Get Change Request (Open)
   async getOpenChangeRequest() {
-    try {
-      const response = await axios.get(ENDPOINTS.GET_OPEN_CHANGEREQUEST, {
-        headers: getHeaders(true),
-      });
-      return response.data.data;
-    } catch (error) {
-      console.error("Error Response:", error);
-      console.error("Error Status:", error.response?.status);
-      toast.error(
-        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
-      );
-      throw error.response || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    if (!this.isTokenExpired()) {
+      try {
+        const response = await axios.get(ENDPOINTS.GET_OPEN_CHANGEREQUEST, {
+          headers: getHeaders(true),
+        });
+        return response.data.data;
+      } catch (error) {
+        console.error("Error Response:", error);
+        console.error("Error Status:", error.response?.status);
+        toast.error(
+          error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+        );
+        throw error.response || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+      }
     }
   }
 
@@ -459,18 +475,20 @@ class ApiService {
 
   //GET USER TEAMSPACE
   async getUserTeamSpace() {
-    try {
-      const response = await axios.get(ENDPOINTS.GET_USER_TEAMSPACE, {
-        headers: getHeaders(true),
-      });
-      console.log("Response:", response.data);
-      return response.data.client.teamspaces;
-    } catch (error) {
-      console.error("Error Response:", error);
-      toast.error(
-        error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
-      );
-      throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+    if (!this.isTokenExpired()) {
+      try {
+        const response = await axios.get(ENDPOINTS.GET_USER_TEAMSPACE, {
+          headers: getHeaders(true),
+        });
+        console.log("Response:", response.data);
+        return response.data.client.teamspaces;
+      } catch (error) {
+        console.error("Error Response:", error);
+        toast.error(
+          error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG
+        );
+        throw error.response?.message || MESSAGES.ERRORS.SOMETHING_WENT_WRONG;
+      }
     }
   }
 
@@ -786,9 +804,14 @@ class ApiService {
     }
   }
 
+  isTokenExpired = () => {
+    const expiration = sessionStorage.getItem("expiration");
+    return !expiration || Date.now() > expiration;
+  };
   //LOG OUT
   logout() {
     sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("expiration");
   }
 }
 
