@@ -190,6 +190,7 @@ class ApiService {
   //Upload Document
   async uploadDocument(file, docId, clientId) {
     try {
+      console.log("HERE IS DOC ID",docId);
       const formData = new FormData();
       formData.append("file", file);
       formData.append("clientId", clientId);

@@ -365,24 +365,26 @@ mark {
 
 /*****************************************************SUGGESTION CARD***********************************************/
 .suggestion-list {
-  position: relative; /* Default position */
-  top: 0; /* Normal flow */
+  position: relative;
+  top: 0;
+  min-width: 30%;
+  margin: 0rem 0.5rem;
+  max-width: 350px;
 }
 
 .suggestion-list.sticky {
-  position: sticky; /* Sticky position */
-  top: 0; /* Stick to the top */
-  z-index: 10; /* Ensures it appears above other content */
+  position: sticky;
+  top: 0; 
+  z-index: 10; 
 }
 
 .suggestion-container {
   cursor: pointer;
-  margin: 0.5rem;
   border-radius: 8px;
+  margin: 0.5rem;
   padding: 0.6rem 0.8rem;
   background-color: white;
-  min-width: 30%;
-  max-width: 350px;
+  width: 90%;
   display: "flex";
   flex-direction: column;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);

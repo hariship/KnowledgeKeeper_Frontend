@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, useCallback ,useLayoutEffect} from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import FroalaEditorComponent from "react-froala-wysiwyg";
 import "froala-editor/js/froala_editor.pkgd.min.js";
 import "froala-editor/css/froala_editor.pkgd.min.css";
@@ -72,6 +78,8 @@ const FunctionalEditor = ({ activeItem }) => {
   const debounceDelay = 10000; // 5 minutes timer in milliseconds TODO 300000
   const [fileName, setFileName] = useState("");
   const [activeRecommendation, setActiveRecommendation] = useState("");
+  const [activeDocId, setActiveDocId] = useState("");
+  const activeDocIdRef = useRef(activeDocId);
   const [activeRecommendationType, setActiveRecommendationType] = useState("");
   const [recommendationData, setRecommendationData] = useState(null);
   const [editorWidth, setEditorWidth] = useState(850);
@@ -86,19 +94,19 @@ const FunctionalEditor = ({ activeItem }) => {
     if (location.pathname.includes("document-edit")) {
       setShowChangeRequest(true);
     } else if (location.pathname.includes("document")) {
-      setIsLoading(true);
       setShowChangeRequest(false);
     }
     if (!showChangeRequest) {
       fetchData();
     }
+    console.log("HERE IS NEW ID", id);
+    setActiveDocId(id);
     isFirstContentChange.current = true;
   }, [location]);
 
   //FETCH DOCUMENT DATA
   const fetchData = async () => {
     try {
-      console.log(id, "ID");
       let response;
 
       //Fetch data for change-request (Byte based) recommendation
@@ -203,6 +211,10 @@ const FunctionalEditor = ({ activeItem }) => {
     };
   }, [editorRef, model]);
 
+  useEffect(() => {
+    activeDocIdRef.current = activeDocId;
+    console.log("ACTIVE DOCUMENT ID", activeDocId);
+  }, [activeDocId]);
   //Upload Document : 5 minutes delay
   const uploadDocument = async (newContent) => {
     const htmlBlob = new Blob([newContent], { type: "text/html" });
@@ -210,15 +222,15 @@ const FunctionalEditor = ({ activeItem }) => {
       type: "text/html",
       lastModified: new Date().getTime(),
     });
-    console.log("Model Filename", fileName);
-    console.log("Model TO Be Updated", newContent);
-    await apiService.uploadDocument(htmlFile, id, "5");
+    const currentDocId = activeDocIdRef.current;
+
+    console.log("Uploading Document with ID", currentDocId);
+    await apiService.uploadDocument(htmlFile, currentDocId, "5");
     changedModelRef.current = newContent;
     setIsDirty(false);
   };
 
   const debouncedUpload = debounce((newContent) => {
-    console.log(newContent, "inside debouncedUpload");
     uploadDocument(newContent);
   }, debounceDelay);
 
@@ -373,7 +385,6 @@ const FunctionalEditor = ({ activeItem }) => {
     }
     return null;
   };
-
 
   const placeCircles = () => {
     removeFloatingCircles();
@@ -551,7 +562,6 @@ const FunctionalEditor = ({ activeItem }) => {
     );
   };
 
-
   const addFloatingCircle = (x, y, index) => {
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer) {
@@ -572,8 +582,7 @@ const FunctionalEditor = ({ activeItem }) => {
 
   useEffect(() => {
     highlightText();
-  }, [activeRecommendation]); 
-
+  }, [activeRecommendation]);
 
   useLayoutEffect(() => {
     const suggestionList = suggestionListRef.current;
@@ -587,7 +596,7 @@ const FunctionalEditor = ({ activeItem }) => {
     console.log("exceedsThreshold", exceedsThreshold);
 
     setIsSticky(!exceedsThreshold);
-  }, [recommendationData]); 
+  }, [recommendationData]);
   const removeFloatingCircles = () => {
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer) {
@@ -605,7 +614,9 @@ const FunctionalEditor = ({ activeItem }) => {
       console.log(requestData, "Request Data for resolve");
       setShowResolveWarning(true);
     } else {
-      handleResolveByte();
+      await handleResolveByte();
+      setShowChangeRequest(false);
+      navigate(`/home/document/${id}`);
     }
   };
   const handleCloseResolveWarning = () => {
@@ -618,29 +629,67 @@ const FunctionalEditor = ({ activeItem }) => {
   const handlePrevious = () => {
     if (currentRecommendationIndex > 0) {
       setCurrentRecommendationIndex(currentRecommendationIndex - 1);
-      updateModel();
+      updatePreviousModel();
     }
   };
 
   const handleNext = () => {
     if (currentRecommendationIndex < recommendationData.length - 1) {
+      console.log(recommendationData, "Prior");
+      console.log(
+        currentRecommendationIndex,
+        "currentRecommendationIndex before"
+      );
       setCurrentRecommendationIndex(currentRecommendationIndex + 1);
-      updateModel();
+      console.log(
+        currentRecommendationIndex + 1,
+        "currentRecommendationIndex after"
+      );
+
+      updateNextModel();
     }
   };
-
-  const updateModel = async () => {
+  const updatePreviousModel = async () => {
     setActiveRecommendation(
-      recommendationData[currentRecommendationIndex].previous_string
+      recommendationData[currentRecommendationIndex - 1].previous_string
     );
-    const currentDocId = recommendationData[currentRecommendationIndex].doc_id;
+
+    const currentDocId =
+      recommendationData[currentRecommendationIndex - 1].doc_id;
+    console.log(activeDocId, "active docId");
+    setActiveDocId(currentDocId);
     if (id !== currentDocId) {
       handleUpdate();
       navigate(`/home/${byteId}/document-edit/${currentDocId}`, {
         replace: true,
       });
       const docContentUrl =
-        recommendationData[currentRecommendationIndex].doc_content;
+        recommendationData[currentRecommendationIndex - 1].doc_content;
+      const htmlResponse = await fetch(docContentUrl, { mode: "cors" });
+      const htmlBlob = await htmlResponse.blob();
+      const htmlContent = await htmlBlob.text();
+      setModel(htmlContent);
+    }
+  };
+
+  const updateNextModel = async () => {
+    setActiveRecommendation(
+      recommendationData[currentRecommendationIndex + 1].previous_string
+    );
+    console.log(activeRecommendation, "active recom updated");
+
+    const currentDocId =
+      recommendationData[currentRecommendationIndex + 1].doc_id;
+    console.log(activeDocId, "active docId");
+
+    setActiveDocId(currentDocId);
+    if (id !== currentDocId) {
+      handleUpdate();
+      navigate(`/home/${byteId}/document-edit/${currentDocId}`, {
+        replace: true,
+      });
+      const docContentUrl =
+        recommendationData[currentRecommendationIndex + 1].doc_content;
       const htmlResponse = await fetch(docContentUrl, { mode: "cors" });
       const htmlBlob = await htmlResponse.blob();
       const htmlContent = await htmlBlob.text();
@@ -651,7 +700,9 @@ const FunctionalEditor = ({ activeItem }) => {
   const handleOnTap = () => {
     setShowChangeRequest(false);
     setCurrentRecommendationIndex(-1);
-    navigate(`/home/document/${id}`);
+    navigate(`/home/document/${id}`, {
+      replace: true,
+    });
   };
 
   //LOADING
@@ -757,7 +808,10 @@ const FunctionalEditor = ({ activeItem }) => {
           {isLoading ? (
             <RecommendationSkeletonLoader count={4} />
           ) : (
-            <div  className={`suggestion-list ${isSticky ? "sticky" : ""}`}   ref={suggestionListRef}>
+            <div
+              className={`suggestion-list ${isSticky ? "sticky" : ""}`}
+              ref={suggestionListRef}
+            >
               {recommendationData &&
                 recommendationData
                   .filter(
