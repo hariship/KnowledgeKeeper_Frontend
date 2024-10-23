@@ -524,16 +524,11 @@ const FunctionalEditor = ({ activeItem }) => {
     console.log("Normalized Recommendation:", normalizedRecommendation);
   
     clearPreviousHighlights(doc);
-    
-    // Create a regular expression for the normalized recommendation
-    const regex = new RegExp(`(${normalizedRecommendation})`, 'gi');
-  
-    // Function to recursively search through nodes
-    const highlightInNode = (node) => {
+        const regex = new RegExp(`(${normalizedRecommendation})`, 'gi');
+      const highlightInNode = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const match = regex.exec(node.textContent);
         if (match) {
-          // Create a new span with the highlighted text
           const highlight = document.createElement('mark');
           highlight.textContent = match[0];
           const range = document.createRange();
@@ -543,12 +538,10 @@ const FunctionalEditor = ({ activeItem }) => {
           range.insertNode(highlight);
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        Array.from(node.childNodes).forEach(highlightInNode); // Recurse through child nodes
+        Array.from(node.childNodes).forEach(highlightInNode); 
       }
     };
-  
-    // Start the highlight process from the body of the document
-    highlightInNode(doc.body);
+      highlightInNode(doc.body);
   
     const updatedModel = doc.documentElement.outerHTML;
     setModel(updatedModel);
