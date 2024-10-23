@@ -19,9 +19,10 @@ const HomePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   useEffect(() => {
-    // const token = sessionStorage.getItem("authToken");
+   //TODO : REMOVE
+    const token = sessionStorage.getItem("authToken");
     // if (token) {
-    //   console.log(token);
+      console.log(token);
     //   setIsLoggedIn(true);
     // } else {
     //   console.log("here in else");

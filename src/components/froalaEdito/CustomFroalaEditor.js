@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback ,useLayoutEffect} from "react";
 import FroalaEditorComponent from "react-froala-wysiwyg";
 import "froala-editor/js/froala_editor.pkgd.min.js";
 import "froala-editor/css/froala_editor.pkgd.min.css";
@@ -63,6 +63,8 @@ const FunctionalEditor = ({ activeItem }) => {
   const [showResolveWarning, setShowResolveWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const changedModelRef = useRef(model);
+  const suggestionListRef = useRef(null);
+  const [isSticky, setIsSticky] = useState(false);
   const [currentRecommendationIndex, setCurrentRecommendationIndex] =
     useState(-2);
   // const [showDialog, setShowDialog] = useState(false);
@@ -70,6 +72,7 @@ const FunctionalEditor = ({ activeItem }) => {
   const debounceDelay = 10000; // 5 minutes timer in milliseconds TODO 300000
   const [fileName, setFileName] = useState("");
   const [activeRecommendation, setActiveRecommendation] = useState("");
+  const [activeRecommendationType, setActiveRecommendationType] = useState("");
   const [recommendationData, setRecommendationData] = useState(null);
   const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
@@ -95,6 +98,7 @@ const FunctionalEditor = ({ activeItem }) => {
   //FETCH DOCUMENT DATA
   const fetchData = async () => {
     try {
+      console.log(id, "ID");
       let response;
 
       //Fetch data for change-request (Byte based) recommendation
@@ -253,6 +257,7 @@ const FunctionalEditor = ({ activeItem }) => {
     }
   }, [model]);
 
+  //ADD RECOMMENDATION
   const addText = () => {
     if (!requestData) return;
     const recommendation = recommendationData[currentRecommendationIndex];
@@ -299,70 +304,44 @@ const FunctionalEditor = ({ activeItem }) => {
     }
   };
 
+  //REPLACE RECOMMENDATION
   const replaceText = () => {
     if (!requestData) return;
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
-    let updatedModel = model;
+
     const recommendation = recommendationData[currentRecommendationIndex];
     if (recommendation) {
       const previousText = parseHtmlToNormalText(
         recommendation.previous_string
       );
-      const {
-        section_main_heading1,
-        section_main_heading2,
-        section_main_heading3,
-        section_main_heading4,
-        change_request_text,
-      } = recommendation;
-  
-      let filteredContent = change_request_text;
-  
-      const removeHeadingAndElement = (content, heading) => {
-        if (!heading) return content;
-        const regex = new RegExp(
-          `<h[1-6][^>]*>[^<]*${heading}[^<]*<\\/h[1-6]>`,
-          "gi"
-        );
-        return content.replace(regex, "");
-      };
-      filteredContent = removeHeadingAndElement(
-        filteredContent,
-        section_main_heading1
-      );
-      console.log(filteredContent, "Filter Content");
-      console.log("previous text", previousText);
-      filteredContent = removeHeadingAndElement(
-        filteredContent,
-        section_main_heading2
-      );
-      filteredContent = removeHeadingAndElement(
-        filteredContent,
-        section_main_heading3
-      );
-      filteredContent = removeHeadingAndElement(
-        filteredContent,
-        section_main_heading4
-      );
-  
-      const normalizeText = (text) => text.replace(/\s+/g, " ").trim();
-      const allElements = doc.body.getElementsByTagName("*");
-      Array.from(allElements).forEach((element) => {
-        const elementText = normalizeText(element.innerHTML);
-        if (elementText.includes(normalizeText(previousText))) {
-          console.log("Found matching element");
-          const replacedText = element.innerHTML.replace(
-            normalizeText(previousText),
-            filteredContent
-          );
-          element.innerHTML = replacedText;
-        }
-      });
-  
-      updatedModel = doc.body.innerHTML;  
+      let filteredContent = recommendation.change_request_text;
+      const normalizedPreviousText = previousText
+        .replace(/\n/g, "")
+        .replace(/\s+/g, "")
+        .toLowerCase();
+      const normalizeTextContent = (node) =>
+        node.textContent
+          .replace(/<br\s*\/?>/gi, "")
+          .replace(/&nbsp;/g, "")
+          .replace(/\n/g, "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+      const flatBodyText = normalizeTextContent(doc.body);
+      const matchStartIndex = flatBodyText.indexOf(normalizedPreviousText);
+      const matchEndIndex = matchStartIndex + normalizedPreviousText.length;
+
+      if (matchStartIndex === -1) {
+        return;
+      }
+      let htmlContent = doc.body.innerHTML;
+      const beforeMatch = htmlContent.slice(0, matchStartIndex);
+      const afterMatch = htmlContent.slice(matchEndIndex);
+      htmlContent = beforeMatch + filteredContent + afterMatch;
+      doc.body.innerHTML = htmlContent;
+      const updatedModel = doc.documentElement.outerHTML;
+      setModel(updatedModel);
     }
-    setModel(updatedModel);  
   };
 
   const findHtmlInElement = (element, html) => {
@@ -379,8 +358,6 @@ const FunctionalEditor = ({ activeItem }) => {
         ? element.innerHTML.trim()
         : "";
       const normalizedElementText = element.textContent.trim();
-
-      // Check both innerHTML and textContent to handle both HTML and plain text matches
       if (
         normalizedElementHtml.includes(parsedHtml) || // Check for parsed HTML
         normalizedElementText.includes(parsedHtml) // Check for text match
@@ -397,6 +374,7 @@ const FunctionalEditor = ({ activeItem }) => {
     return null;
   };
 
+
   const placeCircles = () => {
     removeFloatingCircles();
     const tempDiv = document.createElement("div");
@@ -404,60 +382,97 @@ const FunctionalEditor = ({ activeItem }) => {
     tempDiv.style.visibility = "hidden";
     tempDiv.style.top = "0";
     tempDiv.style.left = "0";
-    tempDiv.innerHTML = model; 
+    tempDiv.innerHTML = model; // Assuming 'model' contains the HTML you want to search
     document.body.appendChild(tempDiv);
 
     const editorContainer = document.querySelector(".froala-editor");
+
     if (editorContainer && recommendationData) {
       recommendationData.forEach((rec, index) => {
-        const previousHtml = parseHtmlToNormalText(rec.previous_string);
+        const previousHtml = parseHtmlToNormalText(rec.previous_string); // Normalize previous HTML
         if (!previousHtml) {
           console.warn(
             `No previous HTML string for recommendation index ${index}`
           );
-          return; 
+          return;
         }
 
-        const range = document.createRange();
-        let elementFound = findHtmlInElement(tempDiv, previousHtml);
-        console.log("Element found:", elementFound);
-        if (elementFound) {
-          console.log(`Element innerHTML:`, elementFound.innerHTML);
-          const elementHtml = elementFound.innerHTML.trim();
-          const startIndex = elementHtml.indexOf(previousHtml.trim());
-          if (startIndex !== -1) {
-            const node = elementFound.firstChild;
-            if (node && node.nodeType === Node.TEXT_NODE) {
-              range.setStart(node, startIndex);
-              range.setEnd(node, startIndex + previousHtml.trim().length);
-            } else if (node) {
-              range.selectNodeContents(node);
+        const normalizedPreviousHtml = previousHtml
+          .replace(/\n/g, "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+
+        const normalizeTextContent = (node) =>
+          node.textContent
+            .replace(/<br\s*\/?>/gi, "")
+            .replace(/&nbsp;/g, "")
+            .replace(/\n/g, "")
+            .replace(/\s+/g, "")
+            .toLowerCase();
+
+        // Normalize the HTML content for searching
+        const flatBodyText = normalizeTextContent(tempDiv);
+        const matchStartIndex = flatBodyText.indexOf(normalizedPreviousHtml);
+        const matchEndIndex = matchStartIndex + normalizedPreviousHtml.length;
+
+        if (matchStartIndex === -1) {
+          console.warn(`HTML "${previousHtml}" not found in the document.`);
+          return;
+        }
+
+        // Now, find the actual element where the match starts
+        let range = document.createRange();
+        let currentOffset = 0;
+
+        const findMatchingNode = (node) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            let normalizedText = node.textContent
+              .replace(/\s+/g, "")
+              .toLowerCase();
+            let textLength = normalizedText.length;
+
+            if (
+              currentOffset < matchEndIndex &&
+              currentOffset + textLength > matchStartIndex
+            ) {
+              const startOffset = Math.max(0, matchStartIndex - currentOffset);
+              const endOffset = Math.min(
+                textLength,
+                matchEndIndex - currentOffset
+              );
+
+              range.setStart(node, startOffset);
+              range.setEnd(node, endOffset);
+              return true;
             }
-
-            const changeRequest = document.querySelector(
-              ".change-request-container"
-            );
-            const changeRect = changeRequest.getBoundingClientRect() ?? null;
-            const editorRect = editorContainer.getBoundingClientRect();
-            const rect = range.getBoundingClientRect();
-
-            const x = editorRect.left + rect.left;
-            const y = editorRect.top + window.scrollY + changeRect.height;
-
-            addFloatingCircle(x, y, index + 1);
-          } else {
-            console.warn(
-              `HTML "${previousHtml}" not found in element HTML:`,
-              elementHtml
-            );
+            currentOffset += textLength;
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            for (let childNode of node.childNodes) {
+              if (findMatchingNode(childNode)) return true;
+            }
           }
+          return false;
+        };
+
+        if (findMatchingNode(tempDiv)) {
+          const changeRequest = document.querySelector(
+            ".change-request-container"
+          );
+          const changeRect = changeRequest?.getBoundingClientRect() ?? null;
+          // const editorRect = editorContainer.getBoundingClientRect();
+          const rect = range.getBoundingClientRect();
+
+          const x = rect.left;
+          const y = window.scrollY + rect.top + (changeRect?.height ?? 0);
+          addFloatingCircle(x, y, index + 1);
         } else {
-          console.warn(`No element found for HTML "${previousHtml}".`);
+          console.warn(`No matching element found for HTML "${previousHtml}".`);
         }
       });
     } else {
       console.warn("Editor container or recommendation data not found.");
     }
+
     document.body.removeChild(tempDiv);
   };
 
@@ -470,121 +485,72 @@ const FunctionalEditor = ({ activeItem }) => {
     setModel(newModel);
   }, []);
 
-  // const highlightText = () => {
-  //   if (!requestData || !activeRecommendation) {
-  //     console.warn("No requestData or activeRecommendation found.");
-  //     return;
-  //   }
-  //   let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
-  //   console.log("Active Recommendation with newlines:", activeRecWithNewlines);
-
-  //   let parser = new DOMParser();
-  //   let doc = parser.parseFromString(model, "text/html");
-  //   const normalizedRecommendation = parseHtmlToNormalText(
-  //     activeRecWithNewlines
-  //   );
-  //   console.log("Normalized Recommendation:", normalizedRecommendation);
-  //   clearPreviousHighlights(doc);
-  //   const allElements = doc.body.getElementsByTagName("*");
-  //   console.log("All elements to search:", allElements.length);
-
-  //   Array.from(allElements).forEach((element, index) => {
-  //     if (element.textContent.includes(normalizedRecommendation)) {
-  //       console.log(
-  //         `Match found in element at index ${index}:`,
-  //         element.innerHTML
-  //       );
-  //       const highlightedContent = element.innerHTML.replace(
-  //         normalizedRecommendation,
-  //         `<mark>${normalizedRecommendation}</mark>` 
-  //       );
-  //       element.innerHTML = highlightedContent;
-  //       console.log(
-  //         `Updated innerHTML for element at index ${index}:`,
-  //         element.innerHTML
-  //       );
-  //     }
-  //   });
-
-  //   const updatedModel = doc.documentElement.outerHTML;
-  //   setModel(updatedModel); 
-  // };
+  //HIGHLIGHT TEXT TO BE CHANGED
   const highlightText = () => {
     if (!requestData || !activeRecommendation) {
-      console.warn("No requestData or activeRecommendation found.");
       return;
     }
-    
-    let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
-    console.log("Active Recommendation with newlines:", activeRecWithNewlines);
-  
+    const stripTags = (htmlString) => {
+      let doc = new DOMParser().parseFromString(htmlString, "text/html");
+      return doc.body.textContent || "";
+    };
+    let strippedActiveRecommendation = stripTags(activeRecommendation);
+    let normalizedRecommendation = strippedActiveRecommendation
+      .replace(/\n/g, "")
+      .replace(/\s+/g, "")
+      .toLowerCase();
     let parser = new DOMParser();
     let doc = parser.parseFromString(model, "text/html");
-    const normalizedRecommendation = parseHtmlToNormalText(activeRecWithNewlines);
-    console.log("Normalized Recommendation:", normalizedRecommendation);
-  
     clearPreviousHighlights(doc);
-        const regex = new RegExp(`(${normalizedRecommendation})`, 'gi');
-      const highlightInNode = (node) => {
+    const normalizeTextContent = (node) =>
+      node.textContent
+        .replace(/<br\s*\/?>/gi, "")
+        .replace(/&nbsp;/g, "")
+        .replace(/\n/g, "")
+        .replace(/\s+/g, "")
+        .toLowerCase();
+    let flatBodyText = normalizeTextContent(doc.body);
+    let matchStartIndex = flatBodyText.indexOf(normalizedRecommendation);
+    let matchEndIndex = matchStartIndex + normalizedRecommendation.length;
+
+    if (matchStartIndex === -1) {
+      return;
+    }
+
+    let currentOffset = 0;
+
+    const highlightMatchedText = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        const match = regex.exec(node.textContent);
-        if (match) {
-          const highlight = document.createElement('mark');
-          highlight.textContent = match[0];
-          const range = document.createRange();
-          range.setStart(node, match.index);
-          range.setEnd(node, match.index + match[0].length);
-          range.deleteContents();
-          range.insertNode(highlight);
+        let originalText = node.textContent;
+        let normalizedText = originalText.replace(/\s+/g, "").toLowerCase();
+        let textLength = normalizedText.length;
+        if (
+          currentOffset < matchEndIndex &&
+          currentOffset + textLength > matchStartIndex
+        ) {
+          let parent = node.parentNode;
+          parent.innerHTML = `<mark>${originalText}</mark>`;
         }
+        currentOffset += textLength;
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        Array.from(node.childNodes).forEach(highlightInNode); 
+        Array.from(node.childNodes).forEach((childNode) => {
+          highlightMatchedText(childNode);
+        });
       }
     };
-      highlightInNode(doc.body);
-  
+    highlightMatchedText(doc.body);
     const updatedModel = doc.documentElement.outerHTML;
     setModel(updatedModel);
   };
-  
-  
 
-  // Function to clear previous highlights
   const clearPreviousHighlights = (doc) => {
-    // Clear previous highlights by replacing <mark> with empty string
     const originalInnerHTML = doc.body.innerHTML;
     doc.body.innerHTML = originalInnerHTML.replace(
       /<mark>(.*?)<\/mark>/g,
       "$1"
     );
-    console.log(
-      "Cleared previous highlights. New innerHTML:",
-      doc.body.innerHTML
-    );
   };
 
-  //OLD
-  // const highlightText = () => {
-  //   if (!requestData || !activeRecommendation) return;
-  //   let activeRecWithNewlines = activeRecommendation.replace(/\\n/g, "\n");
-  //   let parser = new DOMParser();
-  //   let doc = parser.parseFromString(model, "text/html");
-  //   const normalizedRecommendation = parseHtmlToNormalText(
-  //     activeRecWithNewlines
-  //   );
-  //   const allElements = doc.body.getElementsByTagName("*");
-  //   Array.from(allElements).forEach((element) => {
-  //     if (element.innerHTML.includes(normalizedRecommendation)) {
-  //       const highlightedContent = element.innerHTML.replace(
-  //         normalizedRecommendation,
-  //         `<span style="background-color: #f7ffff;">${normalizedRecommendation}</span>`
-  //       );
-  //       element.innerHTML = highlightedContent;
-  //     }
-  //   });
-  //   const updatedModel = doc.documentElement.outerHTML;
-  //   // setModel(updatedModel);
-  // };
 
   const addFloatingCircle = (x, y, index) => {
     const editorContainer = document.querySelector(".froala-editor");
@@ -606,8 +572,22 @@ const FunctionalEditor = ({ activeItem }) => {
 
   useEffect(() => {
     highlightText();
-  }, [activeRecommendation]); //TODO
+  }, [activeRecommendation]); 
 
+
+  useLayoutEffect(() => {
+    const suggestionList = suggestionListRef.current;
+    if (!suggestionList) return;
+
+    const suggestionHeight = suggestionList.offsetHeight;
+    const exceedsThreshold = suggestionHeight > window.innerHeight * 0.8;
+
+    console.log("suggestionHeight", suggestionHeight);
+    console.log("window.innerHeight", window.innerHeight * 0.8);
+    console.log("exceedsThreshold", exceedsThreshold);
+
+    setIsSticky(!exceedsThreshold);
+  }, [recommendationData]); 
   const removeFloatingCircles = () => {
     const editorContainer = document.querySelector(".froala-editor");
     if (editorContainer) {
@@ -721,7 +701,7 @@ const FunctionalEditor = ({ activeItem }) => {
                 date={requestData.date_time}
                 message={requestData.request_text}
                 aiEdits={`${currentRecommendationIndex + 1}/${
-                  recommendationData.length
+                  recommendationData.length ?? 0
                 }`}
                 onPrevious={handlePrevious}
                 onNext={handleNext}
@@ -777,36 +757,44 @@ const FunctionalEditor = ({ activeItem }) => {
           {isLoading ? (
             <RecommendationSkeletonLoader count={4} />
           ) : (
-            <div>
+            <div  className={`suggestion-list ${isSticky ? "sticky" : ""}`}   ref={suggestionListRef}>
               {recommendationData &&
-                recommendationData.map((recommendation, index) => (
-                  <SuggestionCardComponent
-                    isLoading={true}
-                    key={recommendation.id}
-                    num={index + 1}
-                    recommendationData={recommendation}
-                    isActive={currentRecommendationIndex === index}
-                    onTapAccept={() => {
-                      if (recommendation.change_request_type === "Add") {
-                        console.log("here is add text");
-                        addText();
-                      } else {
-                        replaceText();
+                recommendationData
+                  .filter(
+                    (recommendation) =>
+                      String(recommendation.doc_id) === String(id)
+                  )
+                  .map((recommendation, index) => (
+                    <SuggestionCardComponent
+                      isLoading={true}
+                      key={recommendation.id}
+                      num={index + 1}
+                      recommendationData={recommendation}
+                      isActive={currentRecommendationIndex === index}
+                      onTapAccept={() => {
+                        if (recommendation.change_request_type === "Add") {
+                          console.log("here is add text");
+                          addText();
+                        } else {
+                          replaceText();
+                        }
+                      }}
+                      onTapReject={() =>
+                        console.log(
+                          `Rejected recommendation ${
+                            currentRecommendationIndex === index
+                          }`
+                        )
                       }
-                    }}
-                    onTapReject={() =>
-                      console.log(
-                        `Rejected recommendation ${
-                          currentRecommendationIndex === index
-                        }`
-                      )
-                    }
-                    onCoverTap={() => {
-                      setActiveRecommendation(recommendation.previous_string);
-                      setCurrentRecommendationIndex(index);
-                    }}
-                  />
-                ))}
+                      onCoverTap={() => {
+                        setActiveRecommendation(recommendation.previous_string);
+                        setActiveRecommendationType(
+                          recommendation.change_request_type
+                        );
+                        setCurrentRecommendationIndex(index);
+                      }}
+                    />
+                  ))}
             </div>
           )}
         </div>

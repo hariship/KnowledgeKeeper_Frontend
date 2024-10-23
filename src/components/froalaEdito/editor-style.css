@@ -84,10 +84,9 @@
 }
 
 mark {
-  background-color: red; /* Custom highlight color */
-  color: #000; /* Custom text color */
+  /* background-color: var(--hoverTeal); TODO  */
+  background-color: red;
 }
-
 
 .fr-wrapper {
   max-height: none !important;
@@ -365,6 +364,17 @@ mark {
 }
 
 /*****************************************************SUGGESTION CARD***********************************************/
+.suggestion-list {
+  position: relative; /* Default position */
+  top: 0; /* Normal flow */
+}
+
+.suggestion-list.sticky {
+  position: sticky; /* Sticky position */
+  top: 0; /* Stick to the top */
+  z-index: 10; /* Ensures it appears above other content */
+}
+
 .suggestion-container {
   cursor: pointer;
   margin: 0.5rem;
