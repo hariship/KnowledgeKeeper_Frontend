@@ -78,15 +78,17 @@ const FunctionalEditor = ({ activeItem }) => {
   const debounceDelay = 10000; // 5 minutes timer in milliseconds TODO 300000
   const [fileName, setFileName] = useState("");
   const [activeRecommendation, setActiveRecommendation] = useState("");
+  const [activeRecommendationId, setActiveRecommendationId] = useState("");
+
   const [activeDocId, setActiveDocId] = useState("");
   const activeDocIdRef = useRef(activeDocId);
+  const activeFileName = useRef(fileName);
   const [activeRecommendationType, setActiveRecommendationType] = useState("");
   const [recommendationData, setRecommendationData] = useState(null);
   const [editorWidth, setEditorWidth] = useState(850);
   const editorRef = useRef(null);
   const realTimeModelRef = useRef(realTimeModel);
   const location = useLocation();
-
   const navigate = useNavigate();
   const { id, byteId } = useParams();
 
@@ -99,7 +101,6 @@ const FunctionalEditor = ({ activeItem }) => {
     if (!showChangeRequest) {
       fetchData();
     }
-    console.log("HERE IS NEW ID", id);
     setActiveDocId(id);
     isFirstContentChange.current = true;
   }, [location]);
@@ -215,10 +216,16 @@ const FunctionalEditor = ({ activeItem }) => {
     activeDocIdRef.current = activeDocId;
     console.log("ACTIVE DOCUMENT ID", activeDocId);
   }, [activeDocId]);
+
+  useEffect(() => {
+    activeFileName.current = fileName;
+  }, [fileName]);
   //Upload Document : 5 minutes delay
   const uploadDocument = async (newContent) => {
+    console.log("here is contentt", newContent);
     const htmlBlob = new Blob([newContent], { type: "text/html" });
-    const htmlFile = new File([htmlBlob], fileName, {
+    const htmlFileName = activeFileName.current;
+    const htmlFile = new File([htmlBlob], htmlFileName, {
       type: "text/html",
       lastModified: new Date().getTime(),
     });
@@ -255,9 +262,27 @@ const FunctionalEditor = ({ activeItem }) => {
     }
   };
 
+  const removeMarkTags = (htmlContent) => {
+    const tempElement = document.createElement("div");
+    tempElement.innerHTML = htmlContent;
+
+    // Remove all <mark> tags, but keep their inner content
+    const marks = tempElement.querySelectorAll("mark");
+    marks.forEach((mark) => {
+      const parent = mark.parentNode;
+      while (mark.firstChild) {
+        parent.insertBefore(mark.firstChild, mark);
+      }
+      parent.removeChild(mark);
+    });
+
+    return tempElement.innerHTML;
+  };
+
   const handleContentChange = (newContent) => {
     setIsDirty(true);
-    debouncedUpload(newContent);
+    const cleanedContent = removeMarkTags(newContent);
+    debouncedUpload(cleanedContent);
   };
 
   //Recommendation Functionality
@@ -267,8 +292,19 @@ const FunctionalEditor = ({ activeItem }) => {
       // realTimeModelRef.current = model;
       placeCircles();
     }
-  }, [model]);
-
+  }, [model, activeRecommendation]);
+  useEffect(() => {
+    if (recommendationData) {
+      const newIndex = recommendationData.findIndex(
+        (recommendation) => recommendation.id === activeRecommendationId
+      );
+  
+      if (newIndex !== -1) {
+        setCurrentRecommendationIndex(newIndex);
+      }
+    }
+  }, [activeRecommendationId]);
+  
   //ADD RECOMMENDATION
   const addText = () => {
     if (!requestData) return;
@@ -399,87 +435,97 @@ const FunctionalEditor = ({ activeItem }) => {
     const editorContainer = document.querySelector(".froala-editor");
 
     if (editorContainer && recommendationData) {
-      recommendationData.forEach((rec, index) => {
-        const previousHtml = parseHtmlToNormalText(rec.previous_string); // Normalize previous HTML
-        if (!previousHtml) {
-          console.warn(
-            `No previous HTML string for recommendation index ${index}`
-          );
-          return;
-        }
+      recommendationData
+        .filter(
+          (recommendation) =>
+            String(recommendation.doc_id) === String(activeDocId)
+        )
+        .forEach((rec, index) => {
+          const previousHtml = parseHtmlToNormalText(rec.previous_string); // Normalize previous HTML
+          if (!previousHtml) {
+            console.warn(
+              `No previous HTML string for recommendation index ${index}`
+            );
+            return;
+          }
 
-        const normalizedPreviousHtml = previousHtml
-          .replace(/\n/g, "")
-          .replace(/\s+/g, "")
-          .toLowerCase();
-
-        const normalizeTextContent = (node) =>
-          node.textContent
-            .replace(/<br\s*\/?>/gi, "")
-            .replace(/&nbsp;/g, "")
+          const normalizedPreviousHtml = previousHtml
             .replace(/\n/g, "")
             .replace(/\s+/g, "")
             .toLowerCase();
 
-        // Normalize the HTML content for searching
-        const flatBodyText = normalizeTextContent(tempDiv);
-        const matchStartIndex = flatBodyText.indexOf(normalizedPreviousHtml);
-        const matchEndIndex = matchStartIndex + normalizedPreviousHtml.length;
-
-        if (matchStartIndex === -1) {
-          console.warn(`HTML "${previousHtml}" not found in the document.`);
-          return;
-        }
-
-        // Now, find the actual element where the match starts
-        let range = document.createRange();
-        let currentOffset = 0;
-
-        const findMatchingNode = (node) => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            let normalizedText = node.textContent
+          const normalizeTextContent = (node) =>
+            node.textContent
+              .replace(/<br\s*\/?>/gi, "")
+              .replace(/&nbsp;/g, "")
+              .replace(/\n/g, "")
               .replace(/\s+/g, "")
               .toLowerCase();
-            let textLength = normalizedText.length;
 
-            if (
-              currentOffset < matchEndIndex &&
-              currentOffset + textLength > matchStartIndex
-            ) {
-              const startOffset = Math.max(0, matchStartIndex - currentOffset);
-              const endOffset = Math.min(
-                textLength,
-                matchEndIndex - currentOffset
-              );
+          // Normalize the HTML content for searching
+          const flatBodyText = normalizeTextContent(tempDiv);
+          const matchStartIndex = flatBodyText.indexOf(normalizedPreviousHtml);
+          const matchEndIndex = matchStartIndex + normalizedPreviousHtml.length;
 
-              range.setStart(node, startOffset);
-              range.setEnd(node, endOffset);
-              return true;
-            }
-            currentOffset += textLength;
-          } else if (node.nodeType === Node.ELEMENT_NODE) {
-            for (let childNode of node.childNodes) {
-              if (findMatchingNode(childNode)) return true;
-            }
+          if (matchStartIndex === -1) {
+            console.warn(`HTML "${previousHtml}" not found in the document.`);
+            return;
           }
-          return false;
-        };
 
-        if (findMatchingNode(tempDiv)) {
-          const changeRequest = document.querySelector(
-            ".change-request-container"
-          );
-          const changeRect = changeRequest?.getBoundingClientRect() ?? null;
-          // const editorRect = editorContainer.getBoundingClientRect();
-          const rect = range.getBoundingClientRect();
+          // Now, find the actual element where the match starts
+          let range = document.createRange();
+          let currentOffset = 0;
 
-          const x = rect.left;
-          const y = window.scrollY + rect.top + (changeRect?.height ?? 0);
-          addFloatingCircle(x, y, index + 1);
-        } else {
-          console.warn(`No matching element found for HTML "${previousHtml}".`);
-        }
-      });
+          const findMatchingNode = (node) => {
+            if (node.nodeType === Node.TEXT_NODE) {
+              let normalizedText = node.textContent
+                .replace(/\s+/g, "")
+                .toLowerCase();
+              let textLength = normalizedText.length;
+
+              if (
+                currentOffset < matchEndIndex &&
+                currentOffset + textLength > matchStartIndex
+              ) {
+                const startOffset = Math.max(
+                  0,
+                  matchStartIndex - currentOffset
+                );
+                const endOffset = Math.min(
+                  textLength,
+                  matchEndIndex - currentOffset
+                );
+
+                range.setStart(node, startOffset);
+                range.setEnd(node, endOffset);
+                return true;
+              }
+              currentOffset += textLength;
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+              for (let childNode of node.childNodes) {
+                if (findMatchingNode(childNode)) return true;
+              }
+            }
+            return false;
+          };
+
+          if (findMatchingNode(tempDiv)) {
+            const changeRequest = document.querySelector(
+              ".change-request-container"
+            );
+            const changeRect = changeRequest?.getBoundingClientRect() ?? null;
+            // const editorRect = editorContainer.getBoundingClientRect();
+            const rect = range.getBoundingClientRect();
+
+            const x = rect.left;
+            const y = window.scrollY + rect.top + (changeRect?.height ?? 0);
+            addFloatingCircle(x, y, index + 1);
+          } else {
+            console.warn(
+              `No matching element found for HTML "${previousHtml}".`
+            );
+          }
+        });
     } else {
       console.warn("Editor container or recommendation data not found.");
     }
@@ -523,7 +569,6 @@ const FunctionalEditor = ({ activeItem }) => {
     let flatBodyText = normalizeTextContent(doc.body);
     let matchStartIndex = flatBodyText.indexOf(normalizedRecommendation);
     let matchEndIndex = matchStartIndex + normalizedRecommendation.length;
-
     if (matchStartIndex === -1) {
       return;
     }
@@ -576,6 +621,20 @@ const FunctionalEditor = ({ activeItem }) => {
       circle.style.top = `${y}px`;
       circle.style.zIndex = 10;
       circle.isHighlighted = false;
+      circle.addEventListener("click", () => {
+        if (showChangeRequest) {
+          if (activeRecommendation === "") {
+            setActiveRecommendation(
+              recommendationData[currentRecommendationIndex].previous_string
+            );
+          }
+        } else {
+          const byte_id =
+            recommendationData[currentRecommendationIndex].byte_id;
+          setShowChangeRequest(false);
+          navigate(`/home/${byte_id}/document-edit/loading`, { replace: true });
+        }
+      });
       editorContainer.appendChild(circle);
     }
   };
@@ -591,9 +650,9 @@ const FunctionalEditor = ({ activeItem }) => {
     const suggestionHeight = suggestionList.offsetHeight;
     const exceedsThreshold = suggestionHeight > window.innerHeight * 0.8;
 
-    console.log("suggestionHeight", suggestionHeight);
-    console.log("window.innerHeight", window.innerHeight * 0.8);
-    console.log("exceedsThreshold", exceedsThreshold);
+    // console.log("suggestionHeight", suggestionHeight);
+    // console.log("window.innerHeight", window.innerHeight * 0.8);
+    // console.log("exceedsThreshold", exceedsThreshold);
 
     setIsSticky(!exceedsThreshold);
   }, [recommendationData]);
@@ -616,7 +675,7 @@ const FunctionalEditor = ({ activeItem }) => {
     } else {
       await handleResolveByte();
       setShowChangeRequest(false);
-      navigate(`/home/document/${id}`);
+      navigate(`/home/document/${activeDocIdRef.current}`);
     }
   };
   const handleCloseResolveWarning = () => {
@@ -628,73 +687,38 @@ const FunctionalEditor = ({ activeItem }) => {
   };
   const handlePrevious = () => {
     if (currentRecommendationIndex > 0) {
-      setCurrentRecommendationIndex(currentRecommendationIndex - 1);
-      updatePreviousModel();
+      updateModel(currentRecommendationIndex - 1);
     }
   };
 
   const handleNext = () => {
     if (currentRecommendationIndex < recommendationData.length - 1) {
-      console.log(recommendationData, "Prior");
-      console.log(
-        currentRecommendationIndex,
-        "currentRecommendationIndex before"
-      );
-      setCurrentRecommendationIndex(currentRecommendationIndex + 1);
-      console.log(
-        currentRecommendationIndex + 1,
-        "currentRecommendationIndex after"
-      );
-
-      updateNextModel();
-    }
-  };
-  const updatePreviousModel = async () => {
-    setActiveRecommendation(
-      recommendationData[currentRecommendationIndex - 1].previous_string
-    );
-
-    const currentDocId =
-      recommendationData[currentRecommendationIndex - 1].doc_id;
-    console.log(activeDocId, "active docId");
-    setActiveDocId(currentDocId);
-    if (id !== currentDocId) {
-      handleUpdate();
-      navigate(`/home/${byteId}/document-edit/${currentDocId}`, {
-        replace: true,
-      });
-      const docContentUrl =
-        recommendationData[currentRecommendationIndex - 1].doc_content;
-      const htmlResponse = await fetch(docContentUrl, { mode: "cors" });
-      const htmlBlob = await htmlResponse.blob();
-      const htmlContent = await htmlBlob.text();
-      setModel(htmlContent);
+      updateModel(currentRecommendationIndex + 1);
     }
   };
 
-  const updateNextModel = async () => {
-    setActiveRecommendation(
-      recommendationData[currentRecommendationIndex + 1].previous_string
-    );
-    console.log(activeRecommendation, "active recom updated");
+  const updateModel = async (newIndex) => {
+    const recommendation = recommendationData[newIndex];
+    setCurrentRecommendationIndex(newIndex);
+    setActiveRecommendation(recommendation.previous_string);
 
-    const currentDocId =
-      recommendationData[currentRecommendationIndex + 1].doc_id;
-    console.log(activeDocId, "active docId");
-
+    const currentDocId = recommendation.doc_id;
     setActiveDocId(currentDocId);
+
     if (id !== currentDocId) {
-      handleUpdate();
-      navigate(`/home/${byteId}/document-edit/${currentDocId}`, {
-        replace: true,
-      });
-      const docContentUrl =
-        recommendationData[currentRecommendationIndex + 1].doc_content;
-      const htmlResponse = await fetch(docContentUrl, { mode: "cors" });
-      const htmlBlob = await htmlResponse.blob();
-      const htmlContent = await htmlBlob.text();
-      setModel(htmlContent);
+      await handleDocumentChange(currentDocId, recommendation.doc_content);
     }
+  };
+
+  // Function to handle document content change and navigation
+  const handleDocumentChange = async (docId, docContentUrl) => {
+    handleUpdate();
+    navigate(`/home/${byteId}/document-edit/${docId}`, { replace: true });
+    setFileName(docContentUrl.substring(docContentUrl.lastIndexOf("/") + 1));
+    const htmlResponse = await fetch(docContentUrl, { mode: "cors" });
+    const htmlBlob = await htmlResponse.blob();
+    const htmlContent = await htmlBlob.text();
+    setModel(htmlContent);
   };
 
   const handleOnTap = () => {
@@ -845,7 +869,7 @@ const FunctionalEditor = ({ activeItem }) => {
                         setActiveRecommendationType(
                           recommendation.change_request_type
                         );
-                        setCurrentRecommendationIndex(index);
+                        setActiveRecommendationId(recommendation.id);
                       }}
                     />
                   ))}

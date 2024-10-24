@@ -59,7 +59,10 @@
   align-items: start;
   width: 100vw;
   height: 100vh;
+  opacity: 1; 
+  transition: opacity 0.5s ease-in; 
 }
+
 
 .content {
   flex-grow: 1;

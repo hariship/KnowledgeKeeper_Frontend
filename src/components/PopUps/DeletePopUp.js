@@ -37,7 +37,7 @@ const DeletePopUp = ({
         >
           {buttonText}
           {loading && (
-            <span className="loader" style={{ marginLeft: "8px" }}></span>
+            <span className="button-loader" ></span>
           )}
         </button>
       </div>

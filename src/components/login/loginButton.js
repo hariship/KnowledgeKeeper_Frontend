@@ -33,7 +33,7 @@ const LoginButton = ({ icon, activeIcon, text, onClick }) => {
       <span style={{ display: "flex", alignItems: "center" }}>
         {text}
         {loading && (
-          <span className="loader" style={{ marginLeft: "8px" }}></span>
+          <span className="button-loader"></span>
         )}
       </span>
     </button>

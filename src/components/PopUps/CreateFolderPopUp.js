@@ -18,7 +18,9 @@ const CreateFolderPopUp = ({
   const [warningMessage, setWarningMessage] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [input, setInput] = useState("");
+
   if (!isVisible) return null;
+
   const handleInputChange = (e) => {
     setInput(e.target.value);
     setWarningMessage("");
@@ -38,21 +40,20 @@ const CreateFolderPopUp = ({
       setLoading(false);
       return;
     }
-  
-    await onClick(input); 
+
+    await onClick(input);
     setInput("");
     setLoading(false);
   };
-  
 
   const handleNameExist = async () => {
     let isExist = false;
 
     if (title === "Create Folder") {
-      isExist = await apiService.isFolderExist(input,selectedId);
+      isExist = await apiService.isFolderExist(input, selectedId);
     } else if (title === "Create Document") {
-      isExist = await apiService.isDocumentExist(input,selectedId);
-    }else if(title=="New teamspace"){
+      isExist = await apiService.isDocumentExist(input, selectedId);
+    } else if (title === "New teamspace") {
       isExist = await apiService.isTeamspaceExist(input);
     }
 
@@ -64,12 +65,8 @@ const CreateFolderPopUp = ({
     return true; 
   };
 
-
   return (
-    <div
-      className={`popup-overlay ${isVisible ? "show" : ""}`}
-      onClick={handleClosePopUp}
-    >
+    <div className={`popup-overlay ${isVisible ? "show" : ""}`} onClick={handleClosePopUp}>
       <div className="popup-content" onClick={(e) => e.stopPropagation()}>
         <div className="show-column">
           <div className="show-row-space-between-header">
@@ -79,11 +76,13 @@ const CreateFolderPopUp = ({
           <label className="text-form-field-popup">
             {label}
             <input
-              type="String"
+              type="text"
               placeholder={labelText}
               maxLength={100}
               onChange={handleInputChange}
-            /> {warningMessage && (
+              value={input} // Keep input value controlled
+            />
+            {warningMessage && (
               <div className="warning-text">
                 {warningMessage}
               </div>
@@ -91,15 +90,13 @@ const CreateFolderPopUp = ({
           </label> 
         </div>
         <button
-          className={`popup-button ${
-            input.trim() || !loading ? "" : "disabled-button"
-          }`}
+          className={`popup-button ${input.trim() || !loading ? "" : "disabled-button"}`}
           onClick={handleButtonClick}
           disabled={!input.trim() || loading}
         >
           {buttonText}
           {loading && (
-            <span className="loader" style={{ marginLeft: "8px" }}></span>
+            <span className="button-loader"></span>
           )}
         </button>
       </div>

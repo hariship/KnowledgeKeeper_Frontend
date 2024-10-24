@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import SvgBackArrow from "../icons/BackArrow";
 import { apiService } from "../services/apiService";
 import axios from "axios";
+import LoadingScreen from "../components/loading-screen/LoginSkelton";
 
 const featureItems = [
   {
@@ -89,6 +90,8 @@ const LoginPage = () => {
   const [isCheckingUser, setIsCheckingUser] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(false);
+
 
   useEffect(() => {
     // Validate login form for existing users
@@ -183,6 +186,7 @@ const LoginPage = () => {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    setPageLoading(true);
     try {
       const userInfo = await axios
         .get("https://www.googleapis.com/oauth2/v3/userinfo", {
@@ -211,6 +215,8 @@ const LoginPage = () => {
       }
     } catch (e) {
       console.error("Login failed:", e);
+    } finally {
+      setPageLoading(true);
     }
   };
 
@@ -414,8 +420,7 @@ const LoginPage = () => {
                     {!userExist ? "Register" : "Log In"}{" "}
                     {loading && (
                       <span
-                        className="loader"
-                        style={{ marginLeft: "8px" }}
+                        className="button-loader"
                       ></span>
                     )}
                   </span>
@@ -455,29 +460,35 @@ const LoginPage = () => {
 
   return (
     <div className="login-page-container">
-      <div className="login-content-wrapper">
-        {/* Left side: Features */}
-        <div className="features-container">
-          <h1 className="login-header">Knowledge Keeper</h1>
-          {featureItems.map((item, index) => (
-            <FeatureItem
-              key={index}
-              icon={item.icon}
-              title={item.title}
-              description={item.description}
-            />
-          ))}
+      {pageLoading ? (
+        // Display loader while processing the login
+        <LoadingScreen/> 
+      ) : (
+        <div className="login-content-wrapper">
+          <div className="features-container">
+            <h1 className="login-header">Knowledge Keeper</h1>
+            {featureItems.map((item, index) => (
+              <FeatureItem
+                key={index}
+                icon={item.icon}
+                title={item.title}
+                description={item.description}
+              />
+            ))}
+          </div>
+          <div className="login-container">{renderForm()}</div>
         </div>
-
-        {/* Right side: Login */}
-        <div className="login-container">{renderForm()}</div>
-      </div>
-      <div className="below-text">
+      )} 
+      {pageLoading ? (
         <span onClick={handleContactUs} className="contact-us">
-          Contact Us
-        </span>
-        {/* <span className="terms-conditions">Terms & Conditions</span> */}
-      </div>
+          </span>      ) : (
+        <div className="below-text">
+          <span onClick={handleContactUs} className="contact-us">
+            Contact Us
+          </span>
+          {/* <span className="terms-conditions">Terms & Conditions</span> */}
+        </div>
+      )}
     </div>
   );
 };

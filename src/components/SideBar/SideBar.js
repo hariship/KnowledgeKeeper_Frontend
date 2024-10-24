@@ -44,20 +44,15 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   const [isInviteMemberPopupVisible, setIsInviteMemberPopUpVisible] =
     useState(false);
   const [projectList, setProjectList] = useState([]);
+
   useEffect(() => {
     getClientDetails();
-  }, [
-    isDeleteTeamSpacePopupVisible,
-    isCreateTeamSpacePopupVisible,
-    isDocDeletePopupVisible,
-    isCreateFolderPopupVisible,
-    isFolderDeletePopupVisible,
-    isCreateDocPopupVisible,
-  ]);
+  }, []);
 
   //Get User Data : Teamspace
   const getClientDetails = async () => {
     const data = await apiService.getUserTeamSpace();
+    setProjectList([]);
     setProjectList(data);
     console.log("navigation activeItem", activeItem);
   };
@@ -93,7 +88,6 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
     setIsInviteMemberPopUpVisible(false);
   };
 
-
   //CREATE Teamspace
   const handleCreateTeamspaceClick = (e) => {
     e.stopPropagation();
@@ -101,6 +95,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
   const handleCreateTeamspace = async (teamspaceName) => {
     await apiService.createTeamspace(teamspaceName);
+    await getClientDetails();
     handleCloseTeamspacePopup();
   };
   const handleCloseTeamspacePopup = () => {
@@ -114,26 +109,27 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
   const handleCreateFolder = async (folderName) => {
     await apiService.createFolder(folderName, selectedId);
+    await getClientDetails();
     handleCloseFolderPopup();
   };
   const handleCloseFolderPopup = () => {
     setIsCreateFolderPopupVisible(false);
   };
 
-
-//Create Document
+  //Create Document
   const handleCreateDocument = async (folderId, documentName) => {
     await apiService.createDocument(documentName, folderId);
+    await getClientDetails();
     handleCloseDocPopup();
   };
   const handleCreateDocClick = (folderId) => {
     setSelectedId(folderId);
     setIsCreateDocPopupVisible(true);
   };
- const handleCloseDocPopup = () => {
+  const handleCloseDocPopup = () => {
     setIsCreateDocPopupVisible(false);
   };
- const handleDocumentClick = (id) => {
+  const handleDocumentClick = (id) => {
     navigate(`document/${id}`);
   };
 
@@ -166,6 +162,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
 
   const handleDeleteTeamspace = async () => {
     await apiService.deleteTeamspace(selectedId);
+    await getClientDetails();
     handleCloseTeamspaceDeletePopup();
   };
   const handleCloseTeamspaceDeletePopup = () => {
@@ -178,6 +175,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
   };
   const handleDeleteFolder = async () => {
     await apiService.deleteFolder(selectedId);
+    await getClientDetails();
     handleCloseFolderDeletePopup();
   };
   const handleCloseFolderDeletePopup = () => {
@@ -195,6 +193,7 @@ const Sidebar = ({ activeItem, isTeamspaceOpen, setIsTeamspaceOpen }) => {
 
   const handleDeleteDoc = async () => {
     await apiService.deleteDocument(selectedId);
+    await getClientDetails();
     handleCloseDocDeletePopup();
   };
   return (

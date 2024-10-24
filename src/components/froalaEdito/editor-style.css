@@ -84,8 +84,9 @@
 }
 
 mark {
-  /* background-color: var(--hoverTeal); TODO  */
+  /* background-color: var(--hoverTeal);  */
   background-color: red;
+  font-size: auto;
 }
 
 .fr-wrapper {
@@ -126,6 +127,10 @@ mark {
   font-weight: bold;
   cursor: pointer;
   z-index: 40;
+}
+
+.floating-circle:hover mark{
+  background-color: var(--hoverTeal);
 }
 
 .circle-content {

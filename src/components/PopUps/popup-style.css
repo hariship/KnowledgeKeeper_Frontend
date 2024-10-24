@@ -14,6 +14,10 @@
   transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
+
+
+
+
 .popup-overlay.show {
   opacity: 1;
   visibility: visible;
@@ -62,6 +66,26 @@
   background-color: grey; 
   /* cursor: not-allowed; */
   opacity: 0.6; 
+}
+.button-loader {
+  padding: 0;
+  border: 2px solid rgba(222, 226, 225, 0.3); /* Light border */
+  border-top: 2px solid var(--darkTeal); /* Loader color */
+  border-radius: 50%;
+  width: 13px; /* Set a width for the loader */
+  height: 13px; /* Set a height for the loader */
+  display: inline-block; /* Make sure it displays correctly */
+  animation: spin 1s linear infinite; /* Spin animation */
+  margin-left: 6px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 .show-row-space-between-header {
   display: flex;
