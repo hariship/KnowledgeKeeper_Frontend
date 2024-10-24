@@ -155,10 +155,13 @@
 .skeleton-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  margin-top: 6px;
+  /* gap: 6px; */
 }
 
 .skeleton-item {
+  margin-bottom:8px ;
+  animation: fadeIn 0.3s ease-in;
   background-color: #efeded;
   border-radius: 8px;
   position: relative;
